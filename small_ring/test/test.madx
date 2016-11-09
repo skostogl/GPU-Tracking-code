@@ -1,0 +1,48 @@
+/////////////////////////////
+!! General parameters
+Lcell = 3;
+nBend=32;
+
+!! Dipole Parameters
+Ld = 1;
+Ad =0.1;
+
+BM: MULTIPOLE, KNL:={Ad,0,0},Lrad:=1;
+QF: MULTIPOLE, KNL:={0,0.1};
+QD: MULTIPOLE, KNL:={0,-0.1};
+SF: MULTIPOLE, KNL:={0,0,0.1};
+SD: MULTIPOLE, KNL:={0,0,-0.1};
+O3: multipole, knl:={0,0,0,0.1};
+
+ 
+arcCELL: SEQUENCE, REFER=centre,L:=3e-50;
+!b1: BM, at=0;
+qf:QF, at=3e-49;
+!qd:QD,at=4e-49;
+!sf:SF, at=5e-49;
+!sd:SD, at=6e-49;
+!o3:O3,at=7e-49;
+ENDSEQUENCE;
+
+beam, particle=proton, energy=2;
+
+MAKETHIN, SEQUENCE=arcCELL;
+use, sequence=arcCELL;
+
+//*************************************************//
+!   TRACKING
+//*************************************************//
+
+track,dump, DELTAP=(10);
+start, x=0.1, px=0.1, y= 0.1,py=0.1;
+run,turns=1000;
+endtrack;
+
+
+plot, file="MAD_track",table=track,haxis=x,vaxis=px,
+particle=1, colour=100;
+plot, file="MAD_track2",table=track2,haxis=x,vaxis=px,
+particle=2, colour=100;
+
+quit;
+/////////////////////////////

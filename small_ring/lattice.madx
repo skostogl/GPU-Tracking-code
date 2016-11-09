@@ -1,0 +1,164 @@
+/////////////////////////////
+!! General parameters
+Lcell = 3;
+nBend=32;
+
+!! Dipole Parameters
+Ld = 1;
+Ad = 2*pi/nBend;
+
+!! Quadrupole Parameters
+K1F = 5e-3;
+K1D = -K1F;
+Lq = 0.2;
+
+!! Sextupole Parameters
+K2F = 0.0;
+K2D = -K2F;
+Ls = 0.5;
+
+!! Octupole Parameters
+K3N=15;
+Loct=1;
+
+QF: QUADRUPOLE, L:=Lq, K1:=K1F;
+QD: QUADRUPOLE, L:=Lq, K1:=K1D;
+!BM: SBEND, L=Ld, angle:=Ad; 
+BM: MULTIPOLE, KNL:={Ad,0,0},Lrad=1;
+SF: MULTIPOLE, KNL:={0,0,K2F};
+SD: MULTIPOLE, KNL:={0,0,K2D};
+O3: multipole, knl:={0,0,0,K3N};
+
+arcCELL: SEQUENCE, REFER=centre, L=Lcell;
+!sx1:SF, at=Lq*0.4;
+qf: QF, at=Lq*0.5;
+b1: BM, at=Lcell*0.25 + Lq*0.5;
+!sx2:SD, at=Lcell*0.50 + Lq*0.4;
+qd: QD, at=Lcell*0.50 + Lq*0.5;
+!o3: O3, at=Lcell*0.50 + Lq*0.6;
+b2: BM, at=Lcell*0.75 + Lq*0.5;
+ENDSEQUENCE;
+
+straight: SEQUENCE, REFER=centre, L=Lcell;
+qf: QF, at=Lq*0.5;
+qd: QD, at=Lcell*0.50 + Lq*0.5;
+ENDSEQUENCE;
+
+
+RFstraight: SEQUENCE, REFER=centre, L=Lcell;
+qf: QF, at=Lq*0.5;
+rf: RFCAVITY, L=Ld, VOLT=5, HARMON=66, at=Lcell*0.25 + Lq*0.5;
+qd: QD, at=Lcell*0.50 + Lq*0.5;
+ENDSEQUENCE;
+
+Larc=Lcell*10;
+arc: SEQUENCE, REFER=entry, L=Larc;
+arcCell,  at=0;
+straight, at=Lcell;
+arcCell,  at=Lcell*2;
+arcCell,  at=Lcell*3;
+arcCell,  at=Lcell*4;
+arcCell,  at=Lcell*5;
+arcCell,  at=Lcell*6;
+arcCell,  at=Lcell*7;
+straight, at=Lcell*8;
+arcCell,  at=Lcell*9;
+ENDSEQUENCE;
+
+ring: SEQUENCE, REFER=entry, L=(Larc+Lcell)*2;
+RFstraight, at=0;
+!straight, at=0;
+arc, at=Lcell;
+straight, at=Lcell+Larc;
+arc, at=Lcell+Larc+Lcell;
+ENDSEQUENCE;
+
+SEQEDIT, SEQUENCE=ring;
+  FLATTEN;
+ENDEDIT;
+
+
+
+beam, particle=electron, energy=2; !RADIATE=true;EMIT,DELTAP=0.01;
+
+MAKETHIN, SEQUENCE=arcCELL;
+MAKETHIN, SEQUENCE=ring;
+use, sequence=arcCELL;
+
+//*************************************************//
+!!   PRE-MATCHING OF THE TUNES
+//*************************************************//
+match, sequence=arcCELL;
+!! Variables
+vary,name=K1F,step=0.0001;
+vary,name=K1D,step=0.0001;
+!! Constraints
+global, Q1=1/6;
+global, Q2=1/6;
+!! The next line ask MAD-X to do the matching itself
+LMDIF, calls = 1000, tolerance=1E-12;
+endmatch;
+!!
+
+//*************************************************//
+!   MATCHING OF THE DISPERSION IN THE RING
+//*************************************************//
+
+use, sequence=ring;
+match, sequence=ring;
+!! Variables
+vary,name=K1F,step=0.00001;
+vary,name=K1D,step=0.00001;
+!! Constraints
+constraint, RANGE=#e DX=0;
+CONSTRAINT, RANGE=#e, dpx=0;
+!! The next line ask MAD-X to do the matching itself
+simplex, calls = 1000, tolerance=1E-12;
+endmatch;
+
+
+//*************************************************//
+!   MATCHING OF THE CHROMATICITY
+//*************************************************//
+
+match, sequence=ring;
+!! Variables
+vary,name=K2F,step=0.0001;
+vary,name=K2D,step=0.0001;
+!! Constraints
+global, dq1=0.0;
+global, dq2=0.0;
+!! The next line ask MAD-X to do the matching itself
+LMDIF, calls = 1000, tolerance=1E-12;
+endmatch;
+
+
+//*************************************************//
+!   TWISS
+//*************************************************//
+use, sequence=ring;
+
+
+!SELECT,FLAG=TWISS, column=name,s,betx,bety,dx,K1L,K2L;
+twiss,file="lattice_RF.twi";
+plot, HAXIS=s, VAXIS=betx,bety,dx,dy,colour=100, interpolate;
+!!,dx,dy
+SYSTEM, "ps2pdf madx.ps && rm madx.ps";
+
+
+//*************************************************//
+!   TRACKING
+//*************************************************//
+
+!track,dump, DELTAP=(1e-3);
+!start, x= 1e-5, px=0, y= 0, py=0;
+!run,turns=1000;
+!endtrack;
+
+!plot, file="MAD_track",table=track,haxis=x,vaxis=px,
+!particle=1,2, colour=100;
+!plot, file="MAD_track",table=track,haxis=y,vaxis=py,
+!particle=1,2, colour=100;
+
+quit;
+/////////////////////////////
