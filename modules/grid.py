@@ -42,7 +42,8 @@ def create_plot(data_x, data_y, index_list=0,title="",xlabel="",ylabel="" ):
   plt. xlabel (xlabel)
   plt. ylabel (ylabel)
   plt. title  (title)
-  fig.savefig( 'saved_plots/'+date+'_'+title+'.pdf' )  
+  plt.show()
+  #fig.savefig( 'saved_plots/'+date+'_'+title+'.pdf' )  
 
 def cmp_grid(sigma_x_init, sigma_x_final, sigma_y_init, sigma_y_final, step): 
   width =  sigma_x_final - sigma_x_init + step

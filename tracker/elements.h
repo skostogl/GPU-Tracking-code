@@ -111,15 +111,15 @@ struct HKicker {
 };
 
 struct RF {
-  Tfloat f, V, h, E;
+  Tfloat f, VE;
 
   __host__ __device__
-  RF(const Tfloat f, const Tfloat V, const Tfloat h, const Tfloat E): f(f),V(V),h(h),E(E) {}
+  RF(const Tfloat f, const Tfloat VE): f(f),VE(VE) {}
 
   __host__ __device__
   void operator()(Particle & p) {
-    const Tfloat K = (2 * pi * h * f * (1e6)) / c;  
-    p.d += V/(E *1e6) * sin( K * p.z );
+    const Tfloat K = (2 * pi * f * (1e6)) / c;  
+    p.d += (VE /1e6) * sin( K * p.z );
   }
 };
 

@@ -53,13 +53,13 @@ def get_d(turns, particles):
       data_all.append(data_d)
     return data_all
 
-def naff(data,data_p,flag=0):
+def naff(data,data_p,second_half=False):
     tunes=[]
     numb_particle = 0
     for particle in (data):
       print "Particle ", numb_particle+1
       tune = NAFF_f1( data[numb_particle],data_p[numb_particle] )
-      if (flag == 1):
+      if (second_half == True):
           tune = 1-tune
       tunes.append(tune)
       print "Tune from NAFF: ",tune

@@ -79,7 +79,7 @@ ENDEDIT;
 
 
 
-beam, particle=electron, energy=2; !RADIATE=true;EMIT,DELTAP=0.01;
+beam, particle=electron, energy=2;!RADIATE=true;
 
 MAKETHIN, SEQUENCE=arcCELL;
 MAKETHIN, SEQUENCE=ring;
@@ -145,12 +145,11 @@ plot, HAXIS=s, VAXIS=betx,bety,dx,dy,colour=100, interpolate;
 !!,dx,dy
 SYSTEM, "ps2pdf madx.ps && rm madx.ps";
 
-
 //*************************************************//
 !   TRACKING
 //*************************************************//
 
-!track,dump, DELTAP=(1e-3);
+!track,dump, DELTAP=(0);
 !start, x= 1e-5, px=0, y= 0, py=0;
 !run,turns=1000;
 !endtrack;
@@ -159,6 +158,11 @@ SYSTEM, "ps2pdf madx.ps && rm madx.ps";
 !particle=1,2, colour=100;
 !plot, file="MAD_track",table=track,haxis=y,vaxis=py,
 !particle=1,2, colour=100;
+
+
+!use,sequence=ring;
+!use,sequence=RFstraight;
+EMIT,DELTAP=0.;
 
 quit;
 /////////////////////////////

@@ -204,11 +204,10 @@ class Lattice {
       }
     } else if ( ele_type == "MARKER" ) { //drop it silently
     } else if ( ele_type == "RFCAVITY" ) {
-       lattice.emplace_back( "RF(%f,%V,%h,%E)");
+       double VE = get_d ("VOLT") / energy; 
+       lattice.emplace_back( "RF(%f,%VE)");
        replace( lattice.back(), "%f", get_s("FREQ") );
-       replace( lattice.back(), "%V",  get_s("VOLT") );
-       replace( lattice.back(), "%h", get_s("HARMON") );
-       replace( lattice.back(), "%E", get_s("ENERGY") );
+       replace( lattice.back(), "%VE", std::to_string(VE) );
     } else {
       if ( !is_zero("L") ) {
         if ( ele_type != "DRIFT" ) {
