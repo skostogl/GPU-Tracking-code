@@ -1,5 +1,6 @@
 from tracker import *
-import math 
+import math
+import time 
 import itertools
 import numpy as np
 from itertools import product
@@ -23,7 +24,7 @@ def cmp_index_segment(n_particles_x, n_particles_y):
   index_list_unq = list(index_list for index_list ,_ in itertools.groupby(index_list))
   return index_list_unq
 
-def create_plot(data_x, data_y, index_list=0):
+def create_plot(data_x, data_y, index_list=0,title="",xlabel="",ylabel="" ):
   segment=[]
   fig,ax=plt.subplots()
   if index_list==0:    
@@ -37,7 +38,11 @@ def create_plot(data_x, data_y, index_list=0):
     lc = mc.LineCollection(segment, colors='k', linewidths=2)
     ax.add_collection(lc)
     ax.autoscale()
-  plt.show()
+  date   = time.strftime( "%Y-%m-%d-%H:%M:%S" )
+  plt. xlabel (xlabel)
+  plt. ylabel (ylabel)
+  plt. title  (title)
+  fig.savefig( 'saved_plots/'+date+'_'+title+'.pdf' )  
 
 def cmp_grid(sigma_x_init, sigma_x_final, sigma_y_init, sigma_y_final, step): 
   width =  sigma_x_final - sigma_x_init + step
