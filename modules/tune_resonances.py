@@ -40,17 +40,21 @@ def make_resonance_diagram(order,x_range=[0,1],y_range=[0,1]):
             if xmin<=const_term<=xmax: # xmin<=x<=xmax
               cmp_gcd = gcd(abs(i),abs(a))
               if (const_term) in vertical_lines:
+                print 'hi'
                 const_term_order = vertical_lines[const_term]["order"]
                 if const_term_order > current_order:
                   vertical_lines[const_term]={"order":max(const_term_order,order)}
                 else:
                   vertical_lines[const_term]={"order": current_order}
+              else:
+                  vertical_lines[const_term]={}
+                  vertical_lines[const_term]={"order": current_order}
   for max_Y in lines:
     for min_Y in lines[max_Y]:
         plt.plot(x_range,[max_Y, min_Y], linewidth=1, color="darkgrey")
+  for const_term in vertical_lines:
+        plt.axvline(const_term, linewidth=1, color="darkgrey")
+
   plt.xlim(x_range)
   plt.ylim(y_range)
 
-                  
-  
-    

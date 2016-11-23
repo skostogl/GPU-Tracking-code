@@ -1,9 +1,5 @@
-import sys
-import math
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 
 from modules.tracker import *
 from modules.naff import *
@@ -19,7 +15,7 @@ lattice.BETY=0.4
 lattice.energy=6500
 lattice.norm_emit_x=2e-6
 lattice.norm_emit_y=2e-6
-lattice.add("BeamBeam(1e8,%d, 11e-6)" % lattice.rel_gamma())
+lattice.add("BeamBeam(1.15e8,%d, 11e-6)" % lattice.rel_gamma())
 #lattice.add("Multipole(3,1e8,0)")
 lattice.optimise()
 lattice.compile()
@@ -31,6 +27,7 @@ lattice.collect_tbt_data = 1
 b,grid = cmp_grid(lattice.sigma_x(),lattice.sigma_x()*6,lattice.sigma_y(),lattice.sigma_y()*6,0.5)
 n_particles=b.size()
 for turn in range(1000):
+  r2 = b.x[0] *b.x[0]+b.y[0]*b.y[0]
   lattice.track(b)
   del lattice.turns[-1]
   for i in range(n_particles):
@@ -59,8 +56,8 @@ plt.show()
 
 ############################ FMA  ##################################
 
-tunes_x1, tunes_y1, tunes_x2, tunes_y2, tune_diffusion = FMA(lattice.turns[1:500], lattice.turns[500:1000])
-fig,ax=create_plot(tunes_x2,tunes_y2, grid, tune_diffusion, colorbar=True, resonance_diagram=True, order=4)
-plt.show()
+#tunes_x1, tunes_y1, tunes_x2, tunes_y2, tune_diffusion = FMA(lattice.turns[1:500], lattice.turns[500:1000])
+#fig,ax=create_plot(tunes_x2,tunes_y2, grid, tune_diffusion, colorbar=True, resonance_diagram=True, order=4)
+#plt.show()
 
 

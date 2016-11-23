@@ -133,8 +133,8 @@ struct BeamBeam {
   __host__ __device__
   void operator()(Particle & p) {  
     double r2 = p.x*p.x + p.y*p.y;
-    p.xp += (2.*n*cst::r0/( gamma )* p.x/r2 * (1.-exp(-0.5*r2/(sigma*sigma))));
-    p.yp += (2.*n*cst::r0/( gamma )* p.y/r2 * (1.-exp(-0.5*r2/(sigma*sigma))));
+    p.xp += 2.*n*cst::r0/(gamma)* p.x/r2 * (1.-exp(-0.5*r2/(sigma*sigma)));
+    p.yp += 2.*n*cst::r0/(gamma)* p.y/r2 * (1.-exp(-0.5*r2/(sigma*sigma)));
   }
 };
 
