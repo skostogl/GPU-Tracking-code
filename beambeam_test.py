@@ -1,9 +1,5 @@
-import sys
-import math
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 
 from modules.tracker import *
 from modules.naff import *
@@ -14,12 +10,12 @@ from modules.FMA import *
 ############################ LATTICE ##################################
 
 lattice = Lattice()
-lattice.BETX=1
-lattice.BETY=1
-lattice.energy=2
-lattice.norm_emit_x=1e-5
-lattice.norm_emit_y=1e-5
-lattice.mass=0.000510998928
+lattice.BETX = 1
+lattice.BETY = 1
+lattice.energy = 2
+lattice.norm_emit_x = 1e-5
+lattice.norm_emit_y = 1e-5
+lattice.mass = 0.000510998928
 lattice.add("BeamBeam(1e12,%d, 1e-4)" % lattice.rel_gamma())
 lattice.optimise()
 lattice.compile()
@@ -28,14 +24,14 @@ lattice.collect_tbt_data = 1
 
 ############################ BUNCH  ##################################
 
-initial_conditions=np.arange(-5*lattice.sigma_x(), 5*lattice.sigma_x(), step=lattice.sigma_x()/10)
-n_particles=len(initial_conditions)
-b=HostBunch(n_particles)
+initial_conditions = np.arange(-5*lattice.sigma_x(), 5*lattice.sigma_x(), step=lattice.sigma_x()/10)
+n_particles = len(initial_conditions)
+b = HostBunch(n_particles)
 for i in range (n_particles):
-    b.xp[i]=0
-    b.x[i]=initial_conditions[i]
-    b.yp[i]=0
-    b.y[i]=initial_conditions[i]
+    b.xp[i] = 0
+    b.x[i] = initial_conditions[i]
+    b.yp[i] = 0
+    b.y[i] = initial_conditions[i]
 
 lattice.track(b)
 

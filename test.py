@@ -1,9 +1,5 @@
-import sys
-import math
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 
 from modules.tracker import *
 from modules.naff import *
@@ -26,10 +22,8 @@ lattice.bunch_energy_spread=1e-4
 
 ############################ BUNCH  ##################################
 
-#b=lattice.make_matched_bunch(n_particles)
-#grid = cmp_grid(lattice.sigma_x,lattice.sigma_x*30,lattice.sigma_y,lattice.sigma_y*30,0.00005)5b, 
-b,grid = cmp_grid(lattice.sigma_x(),lattice.sigma_x()*15,lattice.sigma_y(),lattice.sigma_y()*15,1)
-n_particles=b.size()
+b,grid = cmp_grid(lattice.sigma_x(), lattice.sigma_x()*15, lattice.sigma_y(), lattice.sigma_y()*15,1)
+n_particles = b.size()
 lattice.track(b)
 
 filename = 'tbt.dat'

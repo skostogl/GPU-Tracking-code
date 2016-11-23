@@ -1,4 +1,3 @@
-#SUBDIRS := tracker
 SUBDIRS := tracker NAFF
 
 all: $(SUBDIRS)

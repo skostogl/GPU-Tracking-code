@@ -10,11 +10,11 @@ from modules.FMA import *
 ############################ LATTICE ##################################
 
 lattice = Lattice()
-lattice.BETX=0.4
-lattice.BETY=0.4
-lattice.energy=6500
-lattice.norm_emit_x=2e-6
-lattice.norm_emit_y=2e-6
+lattice.BETX = 0.4
+lattice.BETY = 0.4
+lattice.energy = 6500
+lattice.norm_emit_x = 2e-6
+lattice.norm_emit_y = 2e-6
 lattice.add("BeamBeam(1.15e8,%d, 11e-6)" % lattice.rel_gamma())
 #lattice.add("Multipole(3,1e8,0)")
 lattice.optimise()
@@ -24,10 +24,10 @@ lattice.collect_tbt_data = 1
 
 ############################ BUNCH  ##################################
 
-b,grid = cmp_grid(lattice.sigma_x(),lattice.sigma_x()*6,lattice.sigma_y(),lattice.sigma_y()*6,0.5)
-n_particles=b.size()
+b, grid = cmp_grid(lattice.sigma_x(), lattice.sigma_x()*6, lattice.sigma_y(), lattice.sigma_y()*6, 0.5)
+n_particles = b.size()
 for turn in range(1000):
-  r2 = b.x[0] *b.x[0]+b.y[0]*b.y[0]
+  r2 = b.x[0] *b.x[0] + b.y[0]*b.y[0]
   lattice.track(b)
   del lattice.turns[-1]
   for i in range(n_particles):
@@ -49,8 +49,8 @@ with open(filename,'w') as outfile:
 
 ############################ NAFF  ##################################
 
-tunes_x = naff(lattice.turns[1:1000], vec_HostBunch.x, vec_HostBunch.xp)
-tunes_y = naff(lattice.turns[1:1000], vec_HostBunch.y, vec_HostBunch.yp)
+tunes_x = naff(lattice.turns[0:1000], vec_HostBunch.x, vec_HostBunch.xp)
+tunes_y = naff(lattice.turns[0:1000], vec_HostBunch.y, vec_HostBunch.yp)
 fig,ax=create_plot(tunes_x,tunes_y, grid,resonance_diagram=False)
 plt.show()
 

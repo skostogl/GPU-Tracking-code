@@ -6,6 +6,7 @@
 #include <complex>
 #include <numeric>
 #include <utility>
+#include <fstream>
 
 const double PI = boost::math::constants::pi<double>();
 typedef double Tfloat;
@@ -33,7 +34,6 @@ namespace NAFF {
       sum_vec.push_back(std::conj(data[t])*std::exp(2.0*PI*f*t*z));
     }  
     const double sum_of_elems=-abs(std::accumulate(sum_vec.begin(),sum_vec.end(), std::complex<double>(0.0)));
-    return sum_of_elems/data.size(); 
   }
 
   std::vector<std::complex<Tfloat>> apply_window(const std::vector<Tfloat> &init_data_x, const std::vector<Tfloat> &init_data_xp) {
@@ -72,7 +72,7 @@ double NAFF_f1( const std::vector<Tfloat> & init_data_x,const std::vector<Tfloat
   auto fft = FFT(data);
   std::vector<double> & amps = fft.first;
   std::vector<double> & freqs = fft.second;
-  double peak_frequency=NAFF::find_peak(amps, freqs);
+  double peak_frequency=NAFF::find_peak(amps,freqs);
   auto y = [data](double f){return((NAFF::stat_exp_value(f, data)));};
   double small_step = 0.001;
   double a = peak_frequency-small_step;

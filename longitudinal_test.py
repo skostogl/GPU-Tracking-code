@@ -1,9 +1,5 @@
-import sys
-import math
-import pickle
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib as mpl
 
 from modules.tracker import *
 from modules.naff import *
@@ -17,11 +13,11 @@ lattice = Lattice()
 lattice.read_twiss_table("small_ring/lattice_RF.twi")
 lattice.optimise()
 lattice.compile()
-lattice.n_turns =1000
+lattice.n_turns = 1000
 lattice.collect_tbt_data = 1 # every 1 turn
-lattice.norm_emit_x=1e-5
-lattice.norm_emit_y=1e-5
-lattice.bunch_energy_spread=1e-4
+lattice.norm_emit_x = 1e-5
+lattice.norm_emit_y = 1e-5
+lattice.bunch_energy_spread = 1e-4
 #lattice.bunch_length=1e-3
 
 ############################ BUNCH  ##################################

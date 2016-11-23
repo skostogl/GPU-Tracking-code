@@ -1,14 +1,11 @@
 from tracker import *
 import math
-import time 
 import itertools
 import numpy as np
 from itertools import product
 import matplotlib.pyplot as plt
 from matplotlib import collections as mc
-import matplotlib as mpl
 from tune_resonances import *
-from matplotlib import cm
 
 def cmp_index_segment(n_particles_x, n_particles_y):
   n_particles=int (n_particles_x * n_particles_y)
@@ -72,5 +69,4 @@ def cmp_grid(sigma_x_init, sigma_x_final, sigma_y_init, sigma_y_final, step):
       particle = particle + 1
   segment_indexes=cmp_index_segment(n_particles_x, n_particles_y)
   return b, segment_indexes
-
 
