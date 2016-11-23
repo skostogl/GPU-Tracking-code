@@ -1,11 +1,12 @@
 #pragma once
-
 #include "float_type.h"
 #include "complex.h"
 
-
-const double pi =  3.14159265;
-const double c  =  299792458.0;
+namespace cst {
+  const double pi = 3.14159265;
+  const double c  = 299792458.0;
+  const double r0 = 2.8179402894e-15;
+}
 
 struct Particle {
   Tfloat& x;
@@ -118,20 +119,36 @@ struct RF {
 
   __host__ __device__
   void operator()(Particle & p) {
-    const Tfloat K = (2 * pi * f * (1e6)) / c;  
-    p.d += (VE /1e6) * sin( K * p.z );
+    const Tfloat K = (2 * cst::pi * f * (1e6)) /(cst::c);  
+    p.d += (VE /1e3) * sin(K * p.z );
   }
 };
 
-//struct BeamBeam {
-//  void operator()(const double x, double & xp, const double y, double & yp, const double E, const double m0) const {
-//    const double r2 = rpl::utils::sqr(x) + rpl::utils::sqr(y);
-//    yp += 2.*n*cst::r0/(1. + E/m0) * y/r2 * (1.-exp(-0.5*r2/s2));
-//    xp += 2.*n*cst::r0/(1. + E/m0) * x/r2 * (1.-exp(-0.5*r2/s2));
-//  }
-//};
+struct BeamBeam {
+  double n, gamma, sigma;
 
+  __host__ __device__
+  BeamBeam(size_t n, double gamma, double sigma): n(n), gamma(gamma), sigma(sigma) {}
 
+  __host__ __device__
+  void operator()(Particle & p) {  
+    double r2 = p.x*p.x + p.y*p.y;
+    p.xp += (2.*n*cst::r0/( gamma )* p.x/r2 * (1.-exp(-0.5*r2/(sigma*sigma))));
+    p.yp += (2.*n*cst::r0/( gamma )* p.y/r2 * (1.-exp(-0.5*r2/(sigma*sigma))));
+  }
+};
+
+/*struct Noise_element {
+  double kick;
+  double mean, sigma;
+  __host__ __device__
+  Noise_element(double mean, double sigma): mean(mean), sigma(sigma) {}
+
+  __host__ __device__
+  void operator()(Particle & p) {
+    p.xp += kick;
+  }
+};*/
 
 //__host__ __device__
 //void Drift(const Tfloat L, Particles & p, const size_t t) {

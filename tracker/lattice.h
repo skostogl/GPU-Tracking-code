@@ -61,15 +61,13 @@ class Lattice {
   double bunch_energy_spread = 0.;
   double energy = 0.;
   double mass   = 0.93827203; //Proton mass in GeV
-
   // Turn by turn data is no more than copies of the bunch
   std::vector<HostBunch> turn_by_turn_data;
- 
   size_t collect_tbt_data = 0; //indicates after how many turns to collect the data (0 = never)
 
   Lattice() {}
   Lattice(const std::string & fname) { read_twiss_table(fname); }
-
+ 
   void add(const std::string & ele) {
     lattice.emplace_back(ele);
     edited_lattice = true;
@@ -332,6 +330,7 @@ void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tf
     edited_lattice = false;
   }
 
+
   void track(DeviceBunch & b) {
     if ( edited_lattice ) {
       compile();
@@ -343,7 +342,7 @@ void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tf
           nvrtc.run(b.get_args());
         }
       }
-      if ( collect_tbt_data and n_turns % collect_tbt_data == 0 ) turn_by_turn_data.emplace_back(HostBunch(b));   } );
+      if ( collect_tbt_data and n_turns % collect_tbt_data == 0 ) turn_by_turn_data.emplace_back(HostBunch(b));});
   }
 
   void track(HostBunch & b) {
@@ -421,7 +420,9 @@ void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tf
   double sigma_yp() const {
     return sqrt( geo_emit_y() / BETY);
   } 
-
+  double rel_gamma() const {
+    return gamma_rel(energy,mass);
+  }
   void clear_tbt_data() {
     turn_by_turn_data.clear();
   }

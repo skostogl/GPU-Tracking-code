@@ -59,29 +59,26 @@ std::pair<std::vector<double>,std::vector<double>> FFT(const std::vector<std::co
   fftw_execute(p);
   std::vector<double> amps;
   std::vector<double> freqs;
-  for (size_t i = 0; 2*i < N; i++) {	
+  for (size_t i=0; 2*i<N; i++) {
     amps.push_back(sqrt(out[i][0]*out[i][0]+ out[i][1]*out[i][1]));
     freqs.push_back(i/(N-1.0));
-  }
+  } 
   fftw_destroy_plan(p);
   return std::make_pair(amps,freqs);
 }
 
-double NAFF_f1(const std::vector<Tfloat> & init_data_x,const std::vector<Tfloat> & init_data_xp)  {
-  std::vector<std::complex<Tfloat>> data( NAFF::apply_window(init_data_x,init_data_xp) );
+double NAFF_f1( const std::vector<Tfloat> & init_data_x,const std::vector<Tfloat> & init_data_xp)  {
+  std::vector<std::complex<Tfloat>> data( NAFF::apply_window(init_data_x,init_data_xp) ); 
   auto fft = FFT(data);
   std::vector<double> & amps = fft.first;
   std::vector<double> & freqs = fft.second;
   double peak_frequency=NAFF::find_peak(amps, freqs);
-  //std::cout<<"Tune from FFT: "<<peak_frequency<<std::endl;
-  auto y = [&data](double f){return NAFF::stat_exp_value(f, data);};
-  double small_step = 0.001; //This should be derived from init_data.size
+  auto y = [data](double f){return((NAFF::stat_exp_value(f, data)));};
+  double small_step = 0.001;
   double a = peak_frequency-small_step;
   double b = peak_frequency+small_step;
-  std::pair<double, double> r = boost::math::tools::brent_find_minima(y, a, b, 40); //one should foresee the possibility to adjust this 40, a global variable?
-  //std::cout << "Tune from NAFF: "<<r.first <<std::endl;
-  double scale = 1e-7;
-  r.first = (int)(r.first / scale) * scale; // ?
+  int bits = std::numeric_limits<double>::digits;
+  std::pair<double, double> r = boost::math::tools::brent_find_minima(y, a, b, bits);
   return r.first;
 }
 

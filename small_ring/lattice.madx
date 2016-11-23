@@ -18,7 +18,7 @@ K2D = -K2F;
 Ls = 0.5;
 
 !! Octupole Parameters
-K3N=15;
+K3N=200;
 Loct=1;
 
 QF: QUADRUPOLE, L:=Lq, K1:=K1F;
@@ -30,12 +30,12 @@ SD: MULTIPOLE, KNL:={0,0,K2D};
 O3: multipole, knl:={0,0,0,K3N};
 
 arcCELL: SEQUENCE, REFER=centre, L=Lcell;
-!sx1:SF, at=Lq*0.4;
+sx1:SF, at=Lq*0.4;
 qf: QF, at=Lq*0.5;
 b1: BM, at=Lcell*0.25 + Lq*0.5;
-!sx2:SD, at=Lcell*0.50 + Lq*0.4;
+sx2:SD, at=Lcell*0.50 + Lq*0.4;
 qd: QD, at=Lcell*0.50 + Lq*0.5;
-!o3: O3, at=Lcell*0.50 + Lq*0.6;
+o3: O3, at=Lcell*0.50 + Lq*0.6;
 b2: BM, at=Lcell*0.75 + Lq*0.5;
 ENDSEQUENCE;
 
@@ -66,8 +66,8 @@ arcCell,  at=Lcell*9;
 ENDSEQUENCE;
 
 ring: SEQUENCE, REFER=entry, L=(Larc+Lcell)*2;
-RFstraight, at=0;
-!straight, at=0;
+!RFstraight, at=0;
+straight, at=0;
 arc, at=Lcell;
 straight, at=Lcell+Larc;
 arc, at=Lcell+Larc+Lcell;
@@ -79,7 +79,8 @@ ENDEDIT;
 
 
 
-beam, particle=electron, energy=2;!RADIATE=true;
+beam, particle=electron, energy=2;!npart=1000
+!bb: beambeam, sigx = 1.e-3, sigy = 1.e-3, charge = 1.,bbshape=1;
 
 MAKETHIN, SEQUENCE=arcCELL;
 MAKETHIN, SEQUENCE=ring;
@@ -140,7 +141,7 @@ use, sequence=ring;
 
 
 !SELECT,FLAG=TWISS, column=name,s,betx,bety,dx,K1L,K2L;
-twiss,file="lattice_RF.twi";
+twiss,file="lattice_octupole.twi";
 plot, HAXIS=s, VAXIS=betx,bety,dx,dy,colour=100, interpolate;
 !!,dx,dy
 SYSTEM, "ps2pdf madx.ps && rm madx.ps";
@@ -149,8 +150,8 @@ SYSTEM, "ps2pdf madx.ps && rm madx.ps";
 !   TRACKING
 //*************************************************//
 
-!track,dump, DELTAP=(0);
-!start, x= 1e-5, px=0, y= 0, py=0;
+!track,dump, DELTAP=0;
+!start, x= 1e-3, px=1e-3, y= 1e-3, py=1e-3;
 !run,turns=1000;
 !endtrack;
 

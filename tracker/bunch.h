@@ -74,7 +74,7 @@ struct HostBunch {
     yp(N,0.),
     z (N,0.),
     d (N,0.)
-  {std::cout << "HostBunch::HostBunch " << N << " "<< size()<< std::endl;}
+  {std::cout << "HostBunch::HostBunch " << N << " "<< size()<< std::endl; }
 
   void set_z(const double sigma_z, const double mean_z = 0.) {
     std::normal_distribution<Tfloat> dist(mean_z,sigma_z);
@@ -128,7 +128,6 @@ struct HostBunch {
     CUDA_SAFE_CALL(cuMemcpyHtoD(db.z ,  z.data(), db.bufferSize));
     CUDA_SAFE_CALL(cuMemcpyHtoD(db.d ,  d.data(), db.bufferSize));
   }
-
   size_t size() const {
     const auto s = x.size();
     if ( s!=xp.size() or s!=y.size() or s!=yp.size() or s!=z.size() or s!=d.size() ) {
@@ -150,4 +149,51 @@ DeviceBunch::DeviceBunch(const HostBunch & hb) {
   hb.copyToDeviceBunch(*this);
 }
 
+std::vector<Tfloat> get_x_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
+  std::vector <Tfloat> xs;
+  for (const auto & bunch:b) {
+    xs.push_back(bunch.x[particle_id]);
+  }
+  return xs;
+}
+
+std::vector<Tfloat> get_xp_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
+  std::vector <Tfloat> xp;
+  for (const auto & bunch:b) {
+    xp.push_back(bunch.xp[particle_id]);
+  }
+  return xp;
+}
+
+std::vector<Tfloat> get_y_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
+  std::vector <Tfloat> ys;
+  for (const auto & bunch:b) {
+    ys.push_back(bunch.y[particle_id]);
+  }
+  return ys;
+}
+
+std::vector<Tfloat> get_yp_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
+  std::vector <Tfloat> yp;
+  for (const auto & bunch:b) {
+    yp.push_back(bunch.yp[particle_id]);
+  }
+  return yp;
+}
+
+std::vector<Tfloat> get_d_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
+  std::vector <Tfloat> d;
+  for (const auto & bunch:b) {
+    d.push_back(bunch.d[particle_id]);
+  }
+  return d;
+}
+
+std::vector<Tfloat> get_z_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
+  std::vector <Tfloat> z;
+  for (const auto & bunch:b) {
+    z.push_back(bunch.z[particle_id]);
+  }
+  return z;
+}
 #endif

@@ -6,16 +6,20 @@
 BOOST_PYTHON_MODULE(tracker)
 {
   using namespace boost::python;
- 
-
+  
   class_< std::vector<Tfloat> >("vec_Tfloat")
     .def(vector_indexing_suite< std::vector<Tfloat> >())
   ;
 
   class_< std::vector<HostBunch> >("vec_HostBunch")
     .def(vector_indexing_suite< std::vector<HostBunch> >())
+    .def("x",  &get_x_from_bunches ) 
+    .def("xp", &get_xp_from_bunches)
+    .def("y",  &get_y_from_bunches )
+    .def("yp", &get_yp_from_bunches)
+    .def("d",  &get_d_from_bunches )
+    .def("z",  &get_z_from_bunches )
   ;
-
 
   void (Lattice::*lattice_track_H)(HostBunch&)   = &Lattice::track;
   void (Lattice::*lattice_track_D)(DeviceBunch&) = &Lattice::track;
@@ -32,6 +36,9 @@ BOOST_PYTHON_MODULE(tracker)
     .def("make_matched_bunch", &Lattice::make_matched_bunch)
     .def("track", lattice_track_H)
     .def("track", lattice_track_D)
+    .def("sigma_x", &Lattice::sigma_x)
+    .def("sigma_y", &Lattice::sigma_y)
+    .def("rel_gamma", &Lattice::rel_gamma)
     .def_readwrite("turns", &Lattice::turn_by_turn_data)
     .def_readwrite("n_turns", &Lattice::n_turns)
     .def_readwrite("collect_tbt_data", &Lattice::collect_tbt_data)
@@ -53,8 +60,6 @@ BOOST_PYTHON_MODULE(tracker)
     .def_readwrite("bunch_energy_spread", &Lattice::bunch_energy_spread)
     .def_readwrite("energy", &Lattice::energy)
     .def_readwrite("mass", &Lattice::mass)
-    .def_readwrite("sigma_x", &Lattice::sigma_x)
-    .def_readwrite("sigma_y", &Lattice::sigma_y)
   ;
 
 
@@ -70,6 +75,7 @@ BOOST_PYTHON_MODULE(tracker)
     .def_readwrite("d" , &HostBunch::d )
   ;
  
+
 
   class_<DeviceBunch>("DeviceBunch",init<const HostBunch &>())
   ;
