@@ -52,14 +52,14 @@ with open(filename,'w') as outfile:
 
 ############################ NAFF  ##################################
 
-tunes_x = naff(lattice.turns[1:1000], n_particles, vec_HostBunch.x, vec_HostBunch.xp)
-tunes_y = naff(lattice.turns[1:1000], n_particles, vec_HostBunch.y, vec_HostBunch.yp)
+tunes_x = naff(lattice.turns[1:1000], vec_HostBunch.x, vec_HostBunch.xp)
+tunes_y = naff(lattice.turns[1:1000], vec_HostBunch.y, vec_HostBunch.yp)
 fig,ax=create_plot(tunes_x,tunes_y, grid,resonance_diagram=False)
 plt.show()
 
 ############################ FMA  ##################################
 
-tunes_x1, tunes_y1, tunes_x2, tunes_y2, tune_diffusion = FMA(lattice.turns[1:500], lattice.turns[500:1000], n_particles)
+tunes_x1, tunes_y1, tunes_x2, tunes_y2, tune_diffusion = FMA(lattice.turns[1:500], lattice.turns[500:1000])
 fig,ax=create_plot(tunes_x2,tunes_y2, grid, tune_diffusion, colorbar=True, resonance_diagram=True, order=4)
 plt.show()
 

@@ -45,4 +45,4 @@ plt.show()
 
 ############################ NAFF  ##################################
 
-tunes = naff(lattice.turns[0:1000], n_particles, vec_HostBunch.z, vec_HostBunch.d)
+tunes = naff(lattice.turns[0:1000], vec_HostBunch.z, vec_HostBunch.d)

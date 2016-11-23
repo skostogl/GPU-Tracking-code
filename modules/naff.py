@@ -1,7 +1,8 @@
 from NAFF import *
 
-def naff(data, n_particles, coord, coord_prime=0, second_half =False):
+def naff(data, coord, coord_prime=0, second_half =False):
   tunes=[]
+  n_particles = len(data[0].x)
   for i in range (n_particles):
     tune=NAFF_f1(coord(data,i),coord_prime(data,i))
     if (second_half == True):
