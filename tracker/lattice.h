@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 #include <stdio.h> // remove files
-
+#include <math.h>
 #include "nvrtc_wrap.h"
 #include "bunch.h"
 #include "timer.h"
@@ -190,7 +190,8 @@ class Lattice {
         }
         ++i;
       }
-    } else if ( ele_type == "HKICKER" ) {
+    } 
+      else if ( ele_type == "HKICKER" ) {
       if ( !is_zero("HKICK") ) {
         lattice.emplace_back( "HKicker(%K)" );
         replace( lattice.back(), "%K", get_s("HKICK") );
@@ -200,7 +201,8 @@ class Lattice {
         lattice.emplace_back( "VKicker(%K)" );
         replace( lattice.back(), "%K", get_s("VKICK") );
       }
-    } else if ( ele_type == "MARKER" ) { //drop it silently
+    } 
+      else if ( ele_type == "MARKER" ) { //drop it silently
     } else if ( ele_type == "RFCAVITY" ) {
        double VE = get_d ("VOLT") / energy; 
        lattice.emplace_back( "RF(%f,%VE)");

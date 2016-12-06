@@ -16,7 +16,8 @@ lattice.energy = 2
 lattice.norm_emit_x = 1e-5
 lattice.norm_emit_y = 1e-5
 lattice.mass = 0.000510998928
-lattice.add("BeamBeam(1e12,%d, 1e-4)" % lattice.rel_gamma())
+print lattice.rel_gamma(), lattice.energy
+lattice.add("BeamBeam(1.15e8,%d, 5e-5)" % lattice.energy)
 lattice.optimise()
 lattice.compile()
 lattice.n_turns = 1000
@@ -32,7 +33,7 @@ for i in range (n_particles):
     b.x[i] = initial_conditions[i]
     b.yp[i] = 0
     b.y[i] = initial_conditions[i]
-
+print lattice.sigma_x()
 lattice.track(b)
 
 filename = 'tbt.dat'

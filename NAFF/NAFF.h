@@ -73,12 +73,13 @@ double NAFF_f1( const std::vector<Tfloat> & init_data_x,const std::vector<Tfloat
   std::vector<double> & amps = fft.first;
   std::vector<double> & freqs = fft.second;
   double peak_frequency=NAFF::find_peak(amps,freqs);
-  auto y = [data](double f){return((NAFF::stat_exp_value(f, data)));};
-  double small_step = 0.001;
+  auto y = [&data](double f){ return NAFF::stat_exp_value(f, data); };
+  double small_step = 10./init_data_x.size();
   double a = peak_frequency-small_step;
   double b = peak_frequency+small_step;
-  int bits = std::numeric_limits<double>::digits;
-  std::pair<double, double> r = boost::math::tools::brent_find_minima(y, a, b, bits);
+//  int bits = std::numeric_limits<double>::digits;
+  std::pair<double, double> r = boost::math::tools::brent_find_minima(y, a, b, 70);
+  std::cout << std::setprecision(14) << "FFT: " << peak_frequency << " NAFF: " << r.first << '\n';
   return r.first;
 }
 

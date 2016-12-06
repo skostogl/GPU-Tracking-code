@@ -27,14 +27,15 @@ def make_resonance_diagram(order,x_range=[0,1],y_range=[0,1]):
             min_Y = (i-a*xmax)/b
             if (ymin <= max_Y and ymax >= min_Y) or (ymax >= max_Y and ymin <= min_Y):
               cmp_gcd =gcd (abs(i),abs(a))
+
               if (max_Y in lines):
                 if (min_Y in lines[max_Y]) and (lines[max_Y][min_Y]["order"]<current_order): #Already exists, update order
-                  lines[max_Y][min_Y]={"order": current_order}
+                  lines[max_Y][min_Y]={"order": current_order, "label":"%d x+ %d y=%d" %(a,b,i) }
                 else:
-                  lines[max_Y][min_Y]={"order": current_order} 
+                  lines[max_Y][min_Y]={"order": current_order, "label":"%d x+ %d y=%d" %(a,b,i)} 
               else:
                 lines[max_Y]={} 
-                lines[max_Y][min_Y]={"order":current_order}
+                lines[max_Y][min_Y]={"order":current_order,"label":"%d x+ %d y=%d" %(a,b,i)}
           elif a!=0 and b==0: # x=i/a
             const_term = 1.0 *i/a
             if xmin<=const_term<=xmax: # xmin<=x<=xmax
@@ -42,12 +43,12 @@ def make_resonance_diagram(order,x_range=[0,1],y_range=[0,1]):
               if (const_term) in vertical_lines:
                 const_term_order = vertical_lines[const_term]["order"]
                 if const_term_order > current_order:
-                  vertical_lines[const_term]={"order":max(const_term_order,order)}
+                  vertical_lines[const_term]={"order":max(const_term_order,order),"label":"x=%d/%d" %(i,a)}
                 else:
-                  vertical_lines[const_term]={"order": current_order}
+                  vertical_lines[const_term]={"order": current_order,"label":"x=%d/%d" %(i,a) }
               else:
                   vertical_lines[const_term]={}
-                  vertical_lines[const_term]={"order": current_order}
+                  vertical_lines[const_term]={"order": current_order, "label":"x=%d/%d" %(i,a)}
   for max_Y in lines:
     for min_Y in lines[max_Y]:
         plt.plot(x_range,[max_Y, min_Y], linewidth=1, color="darkgrey")

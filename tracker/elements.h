@@ -6,6 +6,9 @@ namespace cst {
   const double pi = 3.14159265;
   const double c  = 299792458.0;
   const double r0 = 2.8179402894e-15;
+  const double e  = 1.602176565e-19; 
+  const double epsilon_0 = 8.854187e-12;
+
 }
 
 struct Particle {
@@ -95,7 +98,7 @@ struct VKicker {
 
   __host__ __device__
   void operator()(Particle & p) {
-    p.yp += kick/(p.d + 1.);
+    p.yp += kick/(p.d + 1.) ;//* p.yp;
   }
 };
 
@@ -107,7 +110,7 @@ struct HKicker {
 
   __host__ __device__
   void operator()(Particle & p) {
-    p.xp += kick/(p.d + 1.);
+    p.xp += kick/(p.d + 1.); //* p.xp;
   }
 };
 
@@ -125,16 +128,18 @@ struct RF {
 };
 
 struct BeamBeam {
-  double n, gamma, sigma;
+  double n, E, sigma;
 
   __host__ __device__
-  BeamBeam(size_t n, double gamma, double sigma): n(n), gamma(gamma), sigma(sigma) {}
+  BeamBeam(size_t n, double E, double sigma): n(n), E(E), sigma(sigma) {}
 
   __host__ __device__
   void operator()(Particle & p) {  
+    using namespace cst;	
     double r2 = p.x*p.x + p.y*p.y;
-    p.xp += 2.*n*cst::r0/(gamma)* p.x/r2 * (1.-exp(-0.5*r2/(sigma*sigma)));
-    p.yp += 2.*n*cst::r0/(gamma)* p.y/r2 * (1.-exp(-0.5*r2/(sigma*sigma)));
+    p.xp += n*e/(2 * pi * epsilon_0 * E *1e9)* p.x/r2 * (1.-exp(-0.5*r2/(sigma*sigma)));
+    p.yp += n*e/(2 * pi * epsilon_0 * E *1e9)* p.y/r2 * (1.-exp(-0.5*r2/(sigma*sigma)));
+    //p.yp += 2.*n*cst::r0/(gamma)* p.y/r2 * (1.-exp(-0.5*r2/(sigma*sigma)));
   }
 };
 
