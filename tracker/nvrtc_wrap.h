@@ -10,7 +10,9 @@
 #include "utils.h"
 
 // GPU occupancy tuning
+//const size_t NUM_THREADS = 256;
 const size_t NUM_THREADS = 1024;
+//const size_t NUM_BLOCKS = 512; 
 const size_t NUM_BLOCKS = 1024; 
 
 // Headers for the cuda code

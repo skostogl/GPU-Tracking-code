@@ -29,22 +29,21 @@ lattice.collect_tbt_data = 1 # every 1 turn
 #print lattice.sigma_x(), lattice.sigma_y()
 #b,grid = cmp_grid (lattice.sigma_x(), lattice.sigma_x()*4, lattice.sigma_y(), lattice.sigma_y()*4,0.3,lattice)
 #n_particles=b.size()
-n_particles=1000
-b=HostBunch(n_particles)
-
+n_particles=10
+#b=HostBunch(n_particles)
+b=lattice.make_matched_bunch(n_particles)
 #for i in range (n_particles):
 #    b.y[i]=0
 #    b.yp[i]=0
 #    b.d[i]=10e-5
 lattice.track(b)
-quit()
+
 ############################ FMA  ##################################
 tunes_x = naff(lattice.turns[0:1000], vec_HostBunch.x, vec_HostBunch.xp, second_half=False)
 tunes_y = naff(lattice.turns[0:1000], vec_HostBunch.y, vec_HostBunch.yp, second_half=False)
-fig,ax=create_plot(tunes_x,tunes_y,grid)
+fig,ax=create_plot(tunes_x,tunes_y,0)
 plt.show()
 
-print len(grid),len(tunes_x)
 #tunes_x1, tunes_y1, tunes_x2, tunes_y2, tune_diffusion = FMA(lattice.turns[0:500], lattice.turns[500:1000])
 #fig,ax=create_plot(tunes_x2,tunes_y2, 0, tune_diffusion, colorbar=True, resonance_diagram=False, order=4)
 #plt.show()
