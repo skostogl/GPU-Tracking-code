@@ -1,11 +1,22 @@
-SUBDIRS := tracker NAFF
+$(VERBOSE).SILENT:
 
-all: $(SUBDIRS)
+all: tracker NAFF
+
+tracker:
+	$(MAKE) -C $@
+
+NAFF:
+	$(MAKE) -C $@
+
+install: all
+	echo "Putting modules in place..."
 	cp tracker/tracker.so modules/
 	cp NAFF/NAFF.so modules/
 
-$(SUBDIRS):
-	$(MAKE) -C $@
+clean:
+	$(MAKE) -C tracker clean
+	$(MAKE) -C NAFF clean
+	rm -f $(wildcard modules/*.so)
 
-.PHONY: all $(SUBDIRS)
+.PHONY: tracker NAFF clean
 

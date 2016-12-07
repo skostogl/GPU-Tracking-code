@@ -1,23 +1,19 @@
-# location of the Python header files
+include ../Makefile.common
 
-PYTHON_VERSION = 2.7
-PYTHON_INCLUDE = /usr/include/python$(PYTHON_VERSION)
-
-# location of the Boost Python include files and library
-
-BOOST_INC = /usr/include
-BOOST_LIB = /usr/lib
-
-# location of CUDA files
-
-CUDA_PATH=/opt/cuda
-CUDA_HEADERS=elements complex float_type
+# files required to compile the cuda kernels
+CUDA_HEADERS = elements.h complex.h float_type.h
+CUDA_NAMES = $(basename $(CUDA_HEADERS))
 
 # compile mesh classes
 tracker.so: interface.o
-	g++ -shared -Wl,--export-dynamic interface.o -L$(BOOST_LIB) -lboost_python -L/usr/lib/python$(PYTHON_VERSION)/config -lpython$(PYTHON_VERSION) -L $(CUDA_PATH)/lib64 -lnvrtc -lcuda -lcudart -Wl,-rpath,$(CUDA_PATH)/lib64 -o tracker.so
+	echo "Linking tracker..."
+	$(CXX) $(OPTS) -shared -Wl,--export-dynamic interface.o $(BOOST_LDFLAGS) -lboost_python $(PYTHON_LDFLAGS) -lpython$(PYTHON_VERSION) $(CUDA_LDFLAGS) -lnvrtc -lcuda -lcudart -Wl,-rpath,$(CUDA_LDFLAGS) -o tracker.so
 
 interface.o: interface.cpp $(wildcard *.h)
-	$(foreach h,$(CUDA_HEADERS), xxd -i < $(h).h > $(h).xxd && echo ', 0' >> $(h).xxd;)
-	g++ -I$(PYTHON_INCLUDE) -I$(BOOST_INC) -I$(CUDA_PATH)/include -fPIC -c interface.cpp
-	$(foreach h,$(CUDA_HEADERS), rm $(h).xxd;)
+	echo "Compiling tracker..."
+	$(foreach h,$(CUDA_NAMES), xxd -i < $(h).h > $(h).xxd && echo ', 0' >> $(h).xxd;)
+	$(CXX) $(OPTS) $(PYTHON_CPPFLAGS) $(BOOST_CPPFLAGS) $(CUDA_CPPFLAGS) -fPIC -c interface.cpp
+	$(foreach h,$(CUDA_NAMES), rm $(h).xxd;)
+
+clean:
+	rm -f interface.o tracker.so

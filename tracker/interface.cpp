@@ -62,7 +62,6 @@ BOOST_PYTHON_MODULE(tracker)
     .def_readwrite("mass", &Lattice::mass)
   ;
 
-
   class_<HostBunch>("HostBunch", init<const size_t>())
     .def("size", &HostBunch::size)
     .def("fromDeviceBunch", &HostBunch::copyFromDeviceBunch)
@@ -75,11 +74,9 @@ BOOST_PYTHON_MODULE(tracker)
     .def_readwrite("d" , &HostBunch::d )
   ;
  
-
-
   class_<DeviceBunch>("DeviceBunch",init<const HostBunch &>())
   ;
   
-
+  def("CUDA_info", CUDA_info);
 }
 
