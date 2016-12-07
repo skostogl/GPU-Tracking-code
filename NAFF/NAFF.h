@@ -7,6 +7,7 @@
 #include <numeric>
 #include <utility>
 #include <fstream>
+#include <memory>
 
 const double PI = boost::math::constants::pi<double>();
 typedef double Tfloat;
@@ -30,6 +31,7 @@ namespace NAFF {
  
   double stat_exp_value(const double f, const std::vector<std::complex<Tfloat>> &data) {
     std::vector<std::complex<double>> sum_vec;
+    sum_vec.reserve(data.size());
     const std::complex<double> z (0,-1);
     for (size_t t=0; t<data.size(); t++) {
       sum_vec.push_back(std::conj(data[t])*std::exp(2.0*PI*f*t*z));
@@ -47,7 +49,7 @@ namespace NAFF {
     //if (counter==1)
       //myfile.open("/home/skostogl/cuTrack/dat_files/hann_window.dat");
     std::vector<std::complex<Tfloat>> data;
-    for (int i=0; i<windowSize; i++) {
+    for (size_t i=0; i<windowSize; i++) {
 
       const double multiplier = 0.5*(1-cos(2*PI*i/(windowSize-1)));
       //const double multiplier = 1.0;
@@ -57,7 +59,7 @@ namespace NAFF {
         myfile<<i<<" "<<multiplier<<std::endl;
       }*/
     
-   }
+    }
     //
     /*if (counter==1){
       std::cout<<"hi"<<std::endl;
@@ -74,24 +76,31 @@ namespace NAFF {
       myfile.close();
     // */
     return data;
-}
-}
-std::pair<std::vector<double>,std::vector<double>> FFT(const std::vector<std::complex<Tfloat>> & data) {
-  const size_t N = data.size();
-  fftw_complex in[N], out[N];
-  fftw_plan p;
-  for (int i = 0; i < N; i++) {
-    in[i][0] = data[i].real();
-    in[i][1] = data[i].imag();
   }
-  p = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
+} //namespace NAFF
+
+std::pair<std::vector<double>,std::vector<double>> FFT(const std::vector<Tfloat> & re, const std::vector<Tfloat> & im) {
+  const size_t N = re.size();
+
+  //alloc memory and prepare data
+  std::vector<fftw_complex> out(N);
+  std::vector<fftw_complex> in(N); 
+  for (size_t i = 0; i < N; i++) {
+    in[i][0] = re[i];
+    in[i][1] = im[i];
+  }
+
+  //make plan and call fftw
+  fftw_plan p;
+  p = fftw_plan_dft_1d(N, in.data(), out.data(), FFTW_FORWARD, FFTW_ESTIMATE);
   fftw_execute(p);
-  std::vector<double> amps;
-  std::vector<double> freqs;
+
+  //finalise the output
+  std::pair<std::vector<double>, std::vector<double>> amps_freqs;
   for (size_t i=0; 2*i<N; i++) {
-    amps.push_back(sqrt(out[i][0]*out[i][0]+ out[i][1]*out[i][1]));
-    freqs.push_back(i/(N-1.0));
-  } 
+    amps_freqs.first .push_back(sqrt(out[i][0]*out[i][0]+ out[i][1]*out[i][1]));
+    amps_freqs.second.push_back(i/(N-1.0));
+  }
  /* if (counter==1){
 	  std::cout<<"hi"<<std::endl;
     std::ofstream myfile;
@@ -103,16 +112,13 @@ std::pair<std::vector<double>,std::vector<double>> FFT(const std::vector<std::co
   }*/
 
   fftw_destroy_plan(p);
-  return std::make_pair(amps,freqs);
+  return amps_freqs;
 }
 
 double NAFF_f1( const std::vector<Tfloat> & init_data_x,const std::vector<Tfloat> & init_data_xp)  {
   counter=counter+1;
-  std::vector<std::complex<Tfloat>> data; 
-  for (int i=0;i<init_data_x.size();i++) 
-    data.emplace_back(init_data_x[i], init_data_xp[i]);
-  auto fft = FFT(data);
-  std::vector<std::complex<Tfloat>> wdata( NAFF::apply_hann_window(init_data_x,init_data_xp) ); 
+  auto fft = FFT(init_data_x, init_data_xp);
+  std::vector<std::complex<Tfloat>> wdata = NAFF::apply_hann_window(init_data_x,init_data_xp);
   std::vector<double> & amps = fft.first;
   std::vector<double> & freqs = fft.second;
   double peak_frequency=NAFF::find_peak(amps,freqs);
@@ -138,10 +144,5 @@ double NAFF_f1( const std::vector<Tfloat> & init_data_x,const std::vector<Tfloat
 }
 
 
-   
-  
-  
-  
-  
 
 
