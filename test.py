@@ -39,14 +39,11 @@ with open(filename,'w') as outfile:
     outfile.write("{} {} {} {} {} {}\n".format(t[0], t[1], t[2], t[3], t[4], t[5]))
 
 ############################ NAFF  ##################################
-#
-#tunes_x = naff(lattice.turns[0:1000], vec_HostBunch.x, vec_HostBunch.xp, second_half=True)
-#tunes_y = naff(lattice.turns[0:1000], vec_HostBunch.y, vec_HostBunch.yp, second_half=False)
-#fig,ax=create_plot(tunes_x,tunes_y, grid,resonance_diagram=False)
-#plt.show()
-#quit()
+tunes_x = naff(lattice.turns[0:1000], vec_HostBunch.x, vec_HostBunch.xp, second_half=True)
+tunes_y = naff(lattice.turns[0:1000], vec_HostBunch.y, vec_HostBunch.yp, second_half=False)
+fig,ax=create_plot(tunes_x,tunes_y, grid,resonance_diagram=False)
+plt.show()
 ############################ FMA  ##################################
-
 tunes_x1, tunes_y1, tunes_x2, tunes_y2, tune_diffusion = FMA(lattice.turns[1:5000], lattice.turns[5000:10000],second_half_x=True, second_half_y=True)
 fig,ax=create_plot(tunes_x2,tunes_y2, grid, tune_diffusion, colorbar=True, resonance_diagram=True, order=4)
 plt.show()

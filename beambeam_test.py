@@ -8,7 +8,6 @@ from modules.tune_resonances import *
 from modules.FMA import *
 
 ############################ LATTICE ##################################
-
 lattice = Lattice()
 lattice.BETX = 1
 lattice.BETY = 1
@@ -43,6 +42,5 @@ with open(filename,'w') as outfile:
     outfile.write("{} {} {} {} {} {}\n".format(t[0], t[1], t[2], t[3], t[4], t[5]))
 
 ############################ FMA  ##################################
-
 fig, ax =create_plot (lattice.turns[-1].x, lattice.turns[-1].xp)
 plt.show()

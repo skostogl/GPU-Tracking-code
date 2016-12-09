@@ -35,10 +35,10 @@ n_particles=b.size()
 lattice.track(b)
 
 ############################ FMA  ##################################
-#tunes_x = naff(lattice.turns[0:10000], vec_HostBunch.x, vec_HostBunch.xp, second_half=False)
-#tunes_y = naff(lattice.turns[0:10000], vec_HostBunch.y, vec_HostBunch.yp, second_half=False)
-#fig,ax=create_plot(tunes_x,tunes_y)
-#plt.show()
+tunes_x = naff(lattice.turns[0:10000], vec_HostBunch.x, vec_HostBunch.xp, second_half=False)
+tunes_y = naff(lattice.turns[0:10000], vec_HostBunch.y, vec_HostBunch.yp, second_half=False)
+fig,ax=create_plot(tunes_x,tunes_y)
+plt.show()
 
 tunes_x1, tunes_y1, tunes_x2, tunes_y2, tune_diffusion = FMA(lattice.turns[0:5000], lattice.turns[5000:10000])
 fig,ax=create_plot(tunes_x2,tunes_y2, 0, tune_diffusion, colorbar=False, resonance_diagram=False, order=4)
@@ -54,28 +54,3 @@ particle_y=[(lattice.turns[0].y[i]/lattice.sigma_y()) for i in range (n_particle
 fig,ax = create_plot (particle_x,particle_y,0,tune_diffusion,colorbar=True,resonance_diagram=False,order=4)
 plt.show()
 
-filename = '/home/skostogl/cuTrack/dat_files/initial_chroma0.dat'
-tbt = [ (particle_x[i], particle_y[i],tune_diffusion[i]) for i in range (n_particles)]
-with open(filename,'w') as outfile:
-    for t in tbt:
-      outfile.write("{} {} {}\n".format(t[0], t[1], t[2]))
-
-
-#for i in range (n_particles):
-#  filename = '/home/skostogl/cuTrack/dat_files/test/particle_%d_pos_delta.dat'%i
-#  tbt = [ (b.x[i], b.xp[i], b.y[i], b.yp[i]) for b in lattice.turns ]
-#  with open(filename,'w') as outfile:
-#    for t in tbt:
-#      outfile.write("{} {} {} {}\n".format(t[0], t[1], t[2], t[3]))
-
-#filename = '/home/skostogl/cuTrack/dat_files/.dat'
-#tbt = [ (lattice.turns[0].x[i], lattice.turns[0].y[i],tune_diffusion[i]) for i in range (n_particles)]
-#with open(filename,'w') as outfile:
-#    for t in tbt:
-#      outfile.write("{} {} {}\n".format(t[0], t[1], t[2]))
-
-#particles_x=[(lattice.turns[0].x[i]) for i in range (n_particles)]
-#particles_y=[(lattice.turns[0].y[i]) for i in range (n_particles)]
-#create_plot(particles_x,particles_y)
-#plt.show()
-#quit()

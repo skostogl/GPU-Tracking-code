@@ -26,12 +26,12 @@ lattice.norm_emit_x = 2e-6
 lattice.norm_emit_y = 2e-6
 lattice.collect_tbt_data = 1 # every 1 turn
 
-#print lattice.sigma_x(), lattice.sigma_y()
-#b,grid = cmp_grid (lattice.sigma_x(), lattice.sigma_x()*4, lattice.sigma_y(), lattice.sigma_y()*4,0.3,lattice)
-#n_particles=b.size()
-n_particles=10
+print lattice.sigma_x(), lattice.sigma_y()
+b,grid = cmp_grid (lattice.sigma_x(), lattice.sigma_x()*4, lattice.sigma_y(), lattice.sigma_y()*4,0.3,lattice)
+n_particles=b.size()
+#n_particles=10
 #b=HostBunch(n_particles)
-b=lattice.make_matched_bunch(n_particles)
+#b=lattice.make_matched_bunch(n_particles)
 #for i in range (n_particles):
 #    b.y[i]=0
 #    b.yp[i]=0
@@ -55,33 +55,33 @@ plt.show()
 
 
 
-#for i in range (n_particles):
-#  filename = '/home/skostogl/cuTrack/dat_files/test/particle_%d_pos_delta.dat'%i
-#  tbt = [ (b.x[i], b.xp[i], b.y[i], b.yp[i]) for b in lattice.turns ]
-#  with open(filename,'w') as outfile:
-#    for t in tbt:
-#      outfile.write("{} {} {} {}\n".format(t[0], t[1], t[2], t[3]))
-
-filename = '/home/skostogl/cuTrack/dat_files/footprint_grid.dat'
-tbt = [ (tunes_x[i],tunes_y[i]) for i in range (n_particles)]
-with open(filename,'w') as outfile:
-    for t in tbt:
-      outfile.write("{} {} \n".format(t[0], t[1]))
-##useful
-#particles_x=[(lattice.turns[0].x[i]/lattice.sigma_x()) for i in range (n_particles)]
-#particles_y=[(lattice.turns[0].y[i]/lattice.sigma_y()) for i in range (n_particles)]
-#create_plot(particles_x,particles_y,grid)
-
-#filename = '/home/skostogl/cuTrack/dat_files/initial_footprint_grid.dat'
-#tbt = [ (particles_x[i],particles_y[i]) for i in range (n_particles)]
-#with open(filename,'w') as outfile:
-#    for t in tbt:
-#      outfile.write("{} {} \n".format(t[0], t[1]))
-#plt.show()
 
 
-filename = '/home/skostogl/cuTrack/dat_files/grid_footprint_grid.dat'
-tbt = [ (grid[i][0],grid[i][1]) for i in range (len(grid))]
-with open(filename,'w') as outfile:
-  for t in tbt:
-    outfile.write("{} {}\n".format(t[0], t[1]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

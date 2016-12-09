@@ -32,7 +32,7 @@ struct Drift {
     const Tfloat cyp = p.yp;
     p.x += cxp * L;
     p.y += cyp * L;
-    p.z += L * 0.5 * (cxp*cxp + cyp*cyp);
+//    p.z += L * 0.5 * (cxp*cxp + cyp*cyp);
   }
 };
 

@@ -17,12 +17,11 @@ lattice.norm_emit_x = 2e-6
 lattice.norm_emit_y = 2e-6
 
 lattice.add("BeamBeam(1.15e11,%d, 11e-6)" % lattice.energy)
-#lattice.add("Multipole(3,1e8,0)")
+lattice.add("Multipole(3,-1e8,0)")
 lattice.optimise()
 lattice.compile()
 lattice.n_turns = 1
 lattice.collect_tbt_data = 1 
-print lattice.sigma_x(),lattice.sigma_y(),lattice.energy, lattice.mass
 
 ############################ BUNCH  ##################################
 
