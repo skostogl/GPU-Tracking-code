@@ -341,7 +341,7 @@ void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tf
       compile();
     }
     Timer("Running", [&](){ 
-      for (int i = 0; i < n_turns; ++i) {
+      for (size_t i = 0; i < n_turns; ++i) {
         if ( collect_tbt_data and i % collect_tbt_data == 0 ) turn_by_turn_data.emplace_back(HostBunch(b));
         for (auto & nvrtc: nvrtcs) {
           nvrtc.run(b.get_args());

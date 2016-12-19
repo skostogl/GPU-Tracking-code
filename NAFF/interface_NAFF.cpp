@@ -15,6 +15,7 @@ BOOST_PYTHON_MODULE(NAFF)
    ;	 
 
   def("NAFF_f1",NAFF_f1);
+  def("NAFF_f",NAFF_f);
   def("FFT",FFT);
 
 }

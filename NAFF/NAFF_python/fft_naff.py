@@ -5,40 +5,44 @@ import matplotlib.pyplot as plt
 from math import sqrt
 from scipy.optimize import fminbound
 
-def cmp_fft (lattice,index):
+#def cmp_fft (lattice,index):
+def cmp_fft (fft_n_turns,data):
 
-    fft_n_turns=500
+    #fft_n_turns=500
 
     t = np.arange(fft_n_turns)
-    sp = np.fft.fft( [lattice.turns[i].x[index] for i in range (fft_n_turns)] )
+    #sp = np.fft.fft( [lattice.turns[i].x[index] for i in range (fft_n_turns)] )
+    sp = np.fft.fft(data )
     freq = np.fft.fftfreq(t.shape[-1])
     freq_positive=freq[np.where(freq>=0)]
     sp_positive=abs(sp[np.where(freq>=0)])
     peak_frequency_x=freq_positive[sp_positive.argmax()]
     
     original_signal_x=[]
-    for i in range(lattice.n_turns):
-        original_signal_x.append(lattice.turns[i].x[index])
+    #for i in range(lattice.n_turns):     
+    for i in range(fft_n_turns):
+        #original_signal_x.append(lattice.turns[i].x[index])
+        original_signal_x.append(data)
     original_signal_x=original_signal_x*np.hanning(len(original_signal_x))
 
     xopt_x,it_x=naff(peak_frequency_x,original_signal_x) 
     #print 'NAFF for horizontal',xopt_x
 
-    sp_y = np.fft.fft( [lattice.turns[i].y[index] for i in range(fft_n_turns)] )
-    freq_y = np.fft.fftfreq(t.shape[-1])
-    freq_positive_y=freq_y[np.where(freq_y>=0)]
-    sp_positive_y=abs(sp_y[np.where(freq_y>=0)])
-    peak_frequency_y=freq_positive_y[sp_positive_y.argmax()]
+    #sp_y = np.fft.fft( [lattice.turns[i].y[index] for i in range(fft_n_turns)] )
+    #freq_y = np.fft.fftfreq(t.shape[-1])
+    #freq_positive_y=freq_y[np.where(freq_y>=0)]
+    #sp_positive_y=abs(sp_y[np.where(freq_y>=0)])
+    #peak_frequency_y=freq_positive_y[sp_positive_y.argmax()]
   
-    original_signal_y=[]
-    for i in range(lattice.n_turns):
-      original_signal_y.append(lattice.turns[i].y[index])
-    original_signal_y=original_signal_y*np.hanning(len(original_signal_y))
+    #original_signal_y=[]
+    #for i in range(lattice.n_turns):
+    #  original_signal_y.append(lattice.turns[i].y[index])
+    #original_signal_y=original_signal_y*np.hanning(len(original_signal_y))
 
-    xopt_y,it_y=naff(peak_frequency_y,original_signal_y)
+    #xopt_y,it_y=naff(peak_frequency_y,original_signal_y)
     #print 'NAFF for vertical',xopt_y
     
-    return peak_frequency_x,peak_frequency_y,xopt_x,xopt_y
+    return peak_frequency_x,xopt_x #peak_frequency_y,xopt_x,xopt_y
 
 def cmp_min(f,a,c,b,prec,i):
     i=i+1
