@@ -1,7 +1,7 @@
 include ../Makefile.common
 
 # files required to compile the cuda kernels
-CUDA_HEADERS = elements.h complex.h float_type.h
+CUDA_HEADERS = elements.h complex.h float_type.h particle.h
 CUDA_NAMES = $(basename $(CUDA_HEADERS))
 
 # compile mesh classes

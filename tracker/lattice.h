@@ -16,27 +16,24 @@ KERNEL FUNCTION EXAMPLE
 std::string kernel = "                                          \n\
 #include \"elements.h\"                                         \n\
 extern \"C\" __global__                                         \n\
-void track(size_t n, float* x, float* xp, float* y, float* yp, float* z, float* d) \n\
+void track(size_t n, Particle* p)                               \n\
 {                                                               \n\
   size_t tid = blockIdx.x * blockDim.x + threadIdx.x;           \n\
   if (tid < n) {                                                \n\
-    Particle p = {x[tid],xp[tid],y[tid],yp[tid],z[tid],d[tid]}; \n\
-    Drift d(0.77)(p);                                           \n\
-    Quad qf(0.09)(p);                                           \n\
-    Quad qd(-0.09)(p);                                          \n\
-    Multipole sx(2,1e-4)(p);                                    \n\
+    Drift d(0.77)(p[tid]);                                      \n\
+    Quad qf(0.09)(p[tid]);                                      \n\
+    Quad qd(-0.09)(p[tid]);                                     \n\
+    Multipole sx(2,1e-4)(p[tid]);                               \n\
   }                                                             \n\
 }                                                               \n";
 
 *///////////////////
 
 class Lattice {
-  std::string prefix = "";
-  std::string suffix = "(p);\n";
   std::vector<std::string> lattice;
   bool edited_lattice = true; //flag indicating if recompilation is required
 
-  std::vector<NVRTC> nvrtcs;
+  std::vector<NVRTC> nvrtcs; //modules for kernels managment
 
  public:
   size_t n_turns = 1;
@@ -258,17 +255,16 @@ class Lattice {
     if (lattice.size() == 0) throw std::runtime_error("The lattice looks empty..");
     std::string res = R"===(
 #include "elements.h"
+#include "particle.h"
 extern "C" __global__
-void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tfloat* d) {
+void track(size_t n, Particle* p) {
   size_t tid = blockIdx.x * blockDim.x + threadIdx.x;
   if (tid < n) {
-    Particle p = {x[tid],xp[tid],y[tid],yp[tid],z[tid],d[tid]};
 )===";
 
     for (size_t i = start; (i < start+size) and (i < lattice.size()); i++) {
-      res += prefix;
       res += lattice[i];
-      res += suffix;
+      res += "(p[tid]);\n";
     }
     res += "}}\n";
     return res;
@@ -344,7 +340,7 @@ void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tf
       for (size_t i = 0; i < n_turns; ++i) {
         if ( collect_tbt_data and i % collect_tbt_data == 0 ) turn_by_turn_data.emplace_back(HostBunch(b));
         for (auto & nvrtc: nvrtcs) {
-          nvrtc.run(b.get_args());
+          nvrtc.run(b.get_data().data());
         }
       }
       if ( collect_tbt_data and n_turns % collect_tbt_data == 0 ) turn_by_turn_data.emplace_back(HostBunch(b));});
@@ -370,7 +366,6 @@ void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tf
 
     HostBunch b;
 
-    
     std::normal_distribution<Tfloat> dist_x (0.0,sigma_x());
     std::normal_distribution<Tfloat> dist_xp(0.0,sigma_xp());
     std::normal_distribution<Tfloat> dist_y (0.0,sigma_y());
@@ -382,11 +377,9 @@ void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tf
       const Tfloat xpi = dist_xp(bunch_rnd_gen) - ALFX * xi/sigma_x() * sigma_xp();
       const Tfloat yi  = dist_y (bunch_rnd_gen);
       const Tfloat ypi = dist_yp(bunch_rnd_gen) - ALFY * yi/sigma_y() * sigma_yp();
-      
-      b.x .push_back(xi);
-      b.xp.push_back(xpi);
-      b.y .push_back(yi);
-      b.yp.push_back(ypi);
+     
+      Particle p = {xi,xpi,yi,ypi,0.,0.};
+      b.particles.emplace_back(p);
     }
     b.set_z(bunch_length);
     b.set_d(bunch_energy_spread);
@@ -394,10 +387,10 @@ void track(size_t n, Tfloat* x, Tfloat* xp, Tfloat* y, Tfloat* yp, Tfloat* z, Tf
 
     // Orbit and Dispersion
     for (size_t i = 0; i < N; ++i) {
-      b.x [i] += X  + DX  * b.d[i];
-      b.xp[i] += PX + DPX * b.d[i];
-      b.y [i] += Y  + DY  * b.d[i];
-      b.yp[i] += PY + DPY * b.d[i];
+      b.x (i) += X  + DX  * b.d(i);
+      b.xp(i) += PX + DPX * b.d(i);
+      b.y (i) += Y  + DY  * b.d(i);
+      b.yp(i) += PY + DPY * b.d(i);
     }
     return b;
   }

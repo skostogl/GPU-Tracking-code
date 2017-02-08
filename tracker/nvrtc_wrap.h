@@ -22,6 +22,8 @@ std::vector<std::string> my_headers_names {
 "complex.h"
 ,
 "float_type.h"
+,
+"particle.h"
 };
 
 std::vector<std::string> my_headers {{
@@ -30,6 +32,8 @@ std::vector<std::string> my_headers {{
 #include "complex.xxd"
 },{
 #include "float_type.xxd"
+},{
+#include "particle.xxd"
 }};
 
 
@@ -197,7 +201,7 @@ std::cout << "loaded ptx " << ptx_path << std::endl;
     }
   }
 
-  void run(std::vector<void*> args) {
+  void run(void** args) {
     if (ptx.empty()) throw std::runtime_error("Compile or load the ptx before trying to run it!");
 
     //cuCtxSetCurrent(cuda.context); 
@@ -207,7 +211,7 @@ std::cout << "loaded ptx " << ptx_path << std::endl;
                      NUM_THREADS, 1, 1,   // grid dim
                      NUM_BLOCKS, 1, 1,    // block dim
                      0, NULL,             // shared mem and stream
-                     args.data(), 0));    // arguments
+                     args, 0));    // arguments
     CUDA_SAFE_CALL(cuCtxSynchronize());
   }
 

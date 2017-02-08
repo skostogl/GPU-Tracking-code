@@ -6,6 +6,7 @@
 
 #include "nvrtc_wrap.h"
 #include "float_type.h"
+#include "particle.h"
 
 struct HostBunch;
 
@@ -14,7 +15,7 @@ std::default_random_engine bunch_rnd_gen(56789);
 class DeviceBunch {
   friend class HostBunch;
 
-  CUdeviceptr x,xp,y,yp,z,d;
+  CUdeviceptr particles;
   size_t bufferSize = 0;
   size_t np; //used only to pass out the void* in the args method
 
@@ -25,33 +26,25 @@ class DeviceBunch {
   ~DeviceBunch() { dealloc(); }
 
   size_t n() const {
-    return bufferSize/sizeof(Tfloat);
+    return bufferSize/sizeof(Particle);
   }
 
   void alloc(const size_t N) {
     if ( bufferSize != 0 ) dealloc();
-    bufferSize = N*sizeof(Tfloat);
-    CUDA_SAFE_CALL(cuMemAlloc(&x,  bufferSize));
-    CUDA_SAFE_CALL(cuMemAlloc(&xp, bufferSize));
-    CUDA_SAFE_CALL(cuMemAlloc(&y,  bufferSize));
-    CUDA_SAFE_CALL(cuMemAlloc(&yp, bufferSize));
-    CUDA_SAFE_CALL(cuMemAlloc(&z,  bufferSize));
-    CUDA_SAFE_CALL(cuMemAlloc(&d,  bufferSize));
+    bufferSize = N*sizeof(Particle);
+    CUDA_SAFE_CALL(cuMemAlloc(&particles,  bufferSize));
   }
 
   void dealloc() {
-    CUDA_SAFE_CALL(cuMemFree(x));
-    CUDA_SAFE_CALL(cuMemFree(xp));
-    CUDA_SAFE_CALL(cuMemFree(y));
-    CUDA_SAFE_CALL(cuMemFree(yp));
-    CUDA_SAFE_CALL(cuMemFree(z));
-    CUDA_SAFE_CALL(cuMemFree(d));
+    CUDA_SAFE_CALL(cuMemFree(particles));
     bufferSize = 0;
   }
 
-  std::vector<void*> get_args() {
+  std::vector<void*> get_data() {
     np = n();
-    std::vector<void*> args = { &np, &x, &xp, &y, &yp, &z, &d };
+    std::vector<void*> args;
+    args.push_back( (void*) &np );
+    args.push_back( (void*) &particles);
     return args;
   }
 
@@ -59,39 +52,26 @@ class DeviceBunch {
 };
 
 struct HostBunch {
-  std::vector<Tfloat> x;
-  std::vector<Tfloat> xp;
-  std::vector<Tfloat> y;
-  std::vector<Tfloat> yp;
-  std::vector<Tfloat> z;
-  std::vector<Tfloat> d;
+  std::vector<Particle> particles;
 
   HostBunch() {}
   HostBunch(const size_t N):
-    x (N,0.),
-    xp(N,0.),
-    y (N,0.),
-    yp(N,0.),
-    z (N,0.),
-    d (N,0.)
+    particles(N,Particle())
   {std::cout << "HostBunch::HostBunch " << N << " "<< size()<< std::endl; }
 
   void set_z(const double sigma_z, const double mean_z = 0.) {
     std::normal_distribution<Tfloat> dist(mean_z,sigma_z);
-    z.clear();
-    for (size_t i = 0; i < x.size(); ++i) {
-      z.push_back(dist(bunch_rnd_gen));
+    for (size_t i = 0; i < size(); ++i) {
+      particles[i].z = dist(bunch_rnd_gen);
     }
   }
 
   void set_d(const double sigma_d, const double mean_d = 0.) {
-    d.clear();
     std::normal_distribution<Tfloat> dist(mean_d,sigma_d);
-    for (size_t i = 0; i < x.size(); ++i) {
-      d.push_back(dist(bunch_rnd_gen));
+    for (size_t i = 0; i < size(); ++i) {
+      particles[i].d = dist(bunch_rnd_gen);
     }
   }
-
 
   HostBunch(const HostBunch & o) = default;
   HostBunch(HostBunch && o) = default;
@@ -99,46 +79,35 @@ struct HostBunch {
   HostBunch & operator=(HostBunch && o) = default;
  
   bool operator==(const HostBunch & o) {
-    return ( x == o.x and xp == o.xp and y == o.y and yp == o.yp and z == o.z and d == o.d );
+//    return ( particles == o.particles );
+    return (this == &o);
   }
 
   HostBunch(const DeviceBunch & db) { copyFromDeviceBunch(db); }
 
   void copyFromDeviceBunch(const DeviceBunch & db) {
-    x .resize(db.n());
-    xp.resize(db.n());
-    y .resize(db.n());
-    yp.resize(db.n());
-    z .resize(db.n());
-    d .resize(db.n());
-    CUDA_SAFE_CALL(cuMemcpyDtoH(x .data(), db.x , db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyDtoH(xp.data(), db.xp, db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyDtoH(y .data(), db.y , db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyDtoH(yp.data(), db.yp, db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyDtoH(z .data(), db.z , db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyDtoH(d .data(), db.d , db.bufferSize));
+    particles.resize(db.n());
+    CUDA_SAFE_CALL(cuMemcpyDtoH(particles.data(), db.particles, db.bufferSize));
   }
 
   void copyToDeviceBunch(DeviceBunch & db) const {
     db.alloc(size());
-    CUDA_SAFE_CALL(cuMemcpyHtoD(db.x ,  x.data(), db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyHtoD(db.xp, xp.data(), db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyHtoD(db.y ,  y.data(), db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyHtoD(db.yp, yp.data(), db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyHtoD(db.z ,  z.data(), db.bufferSize));
-    CUDA_SAFE_CALL(cuMemcpyHtoD(db.d ,  d.data(), db.bufferSize));
+    CUDA_SAFE_CALL(cuMemcpyHtoD(db.particles, particles.data(), db.bufferSize));
   }
   size_t size() const {
-    const auto s = x.size();
-    if ( s!=xp.size() or s!=y.size() or s!=yp.size() or s!=z.size() or s!=d.size() ) {
-      throw std::runtime_error("HostBunch particle vector sizes do not match");
-    }
-    return s;
+    return particles.size();
   }
 
   void operator=(const DeviceBunch & db) {
     copyFromDeviceBunch(db);
   }
+
+  Tfloat & x (const size_t i) { return particles[i].x ; }
+  Tfloat & xp(const size_t i) { return particles[i].xp; }
+  Tfloat & y (const size_t i) { return particles[i].y ; }
+  Tfloat & yp(const size_t i) { return particles[i].yp; }
+  Tfloat & z (const size_t i) { return particles[i].z ; }
+  Tfloat & d (const size_t i) { return particles[i].d ; }
 };
 
 void DeviceBunch::operator=(const HostBunch & hb) {
@@ -149,51 +118,52 @@ DeviceBunch::DeviceBunch(const HostBunch & hb) {
   hb.copyToDeviceBunch(*this);
 }
 
-std::vector<Tfloat> get_x_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
-  std::vector <Tfloat> xs;
-  for (const auto & bunch:b) {
-    xs.push_back(bunch.x[particle_id]);
+std::vector<Tfloat> get_x_from_bunches (std::vector<HostBunch> &vb, const size_t particle_id) {
+  std::vector <Tfloat> res;
+  for (auto & b: vb) {
+    res.push_back(b.x(particle_id));
   }
-  return xs;
+  return res;
 }
 
-std::vector<Tfloat> get_xp_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
-  std::vector <Tfloat> xp;
-  for (const auto & bunch:b) {
-    xp.push_back(bunch.xp[particle_id]);
+std::vector<Tfloat> get_xp_from_bunches (std::vector<HostBunch> &vb, const size_t particle_id) {
+  std::vector <Tfloat> res;
+  for (auto & b: vb) {
+    res.push_back(b.xp(particle_id));
   }
-  return xp;
+  return res;
 }
 
-std::vector<Tfloat> get_y_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
-  std::vector <Tfloat> ys;
-  for (const auto & bunch:b) {
-    ys.push_back(bunch.y[particle_id]);
+std::vector<Tfloat> get_y_from_bunches (std::vector<HostBunch> &vb, const size_t particle_id) {
+  std::vector <Tfloat> res;
+  for (auto & b: vb) {
+    res.push_back(b.y(particle_id));
   }
-  return ys;
+  return res;
 }
 
-std::vector<Tfloat> get_yp_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
-  std::vector <Tfloat> yp;
-  for (const auto & bunch:b) {
-    yp.push_back(bunch.yp[particle_id]);
+std::vector<Tfloat> get_yp_from_bunches (std::vector<HostBunch> &vb, const size_t particle_id) {
+  std::vector <Tfloat> res;
+  for (auto & b: vb) {
+    res.push_back(b.yp(particle_id));
   }
-  return yp;
+  return res;
 }
 
-std::vector<Tfloat> get_d_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
-  std::vector <Tfloat> d;
-  for (const auto & bunch:b) {
-    d.push_back(bunch.d[particle_id]);
+std::vector<Tfloat> get_z_from_bunches (std::vector<HostBunch> &vb, const size_t particle_id) {
+  std::vector <Tfloat> res;
+  for (auto & b: vb) {
+    res.push_back(b.z(particle_id));
   }
-  return d;
+  return res;
 }
 
-std::vector<Tfloat> get_z_from_bunches (const std::vector<HostBunch> &b, const size_t particle_id) {
-  std::vector <Tfloat> z;
-  for (const auto & bunch:b) {
-    z.push_back(bunch.z[particle_id]);
+std::vector<Tfloat> get_d_from_bunches (std::vector<HostBunch> &vb, const size_t particle_id) {
+  std::vector <Tfloat> res;
+  for (auto & b: vb) {
+    res.push_back(b.d(particle_id));
   }
-  return z;
+  return res;
 }
+
 #endif
