@@ -52,6 +52,7 @@ def create_plot(data_x, data_y,index_list=0, diff_tunes=0, colorbar=False,resona
     else:
       qx = np.sum(data_x)/len(data_x)
       qy = np.sum(data_y)/len(data_y)
+      #make_resonance_diagram(order, [0,1], [0,1])
       make_resonance_diagram(order, [0,1], [0,1])
       plt.plot()
   plt.axis('equal')

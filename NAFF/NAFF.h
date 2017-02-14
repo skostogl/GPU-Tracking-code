@@ -1,265 +1,220 @@
-#include <fftw3.h>
+#pragma once
 #include <iostream>
-#include <stdlib.h>
 #include <cmath>
 #include <vector>
-#include <complex>
 #include <numeric>
 #include <utility>
-#include <fstream>
-#include <memory>
 #include <algorithm>
 #include <tuple>
-#include <math.h>
+#include <complex>
+#include <fftw3.h>
+#include <fstream>
+#include <boost/math/tools/minima.hpp>
 
-const double PI = boost::math::constants::pi<double>();
+#include "3Dvec.h"
+
 typedef double Tfloat;
+typedef std::vector<double> double_vec;
+typedef std::vector<std::complex<double>> complex_vec;
+const std::complex<double> z (0,1);
 
-namespace NAFF {
-
-  // RMS computation of FFT
-  bool cmp_RMS (std::vector<double> amps, double threshold) {
-    bool f_found= false; 
-    double mean = accumulate (amps.begin(), amps.end(),0.0)/ amps.size();
-    std::vector<double> diff (amps.size());
-    // sqrt(Sigma (x-mean)^2 /N)
-    std::transform(amps.begin(), amps.end(), diff.begin(), [mean](double x) {return x-mean;});
-    double sum = std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0);
-    double RMS= sqrt(sum/amps.size());
-    double max_amp = *std::max_element(amps.begin(), amps.end());
-    if ((max_amp >= threshold *RMS) && (RMS>0.5) )
-      f_found=true;
-    return f_found;
-  }
-  
-  // First estimate of frequency and phase from FFT
-  std::tuple<double, double, bool> find_max_freq(const std::vector<fftw_complex> &fft, double threshold)  {
-    size_t maxIndex = 0;
-    const size_t N = fft.size();
-    std::tuple< std::vector<double>, std::vector<double>, std::vector<double> > amp_freq_phase;
+class NAFF {
+  private:
+    
+    size_t fft_size, f_counter;
+    double fft_frequency, fft_phase, RMS, max_index ; 
+    fftw_plan fftw_plan_;
+    Signal signal;
+    std::vector<double> frequencies;
+    std::vector<Signal> norm_vectors;
+    std::pair<double_vec, double_vec> amps_freqs;
+  //////// Initialize signal
+  void input(double_vec &init_data_x, double_vec &init_data_xp) {
+    for (size_t i=0; i<init_data_x.size(); i++) { 
+      signal.data.emplace_back(std::complex<double>(init_data_x[i],init_data_xp[i])); 
+     }
+  } 
+  //////// Fast Fourier Transform
+  void FFTw () {
+    std::vector<fftw_complex> fftw_(signal.size());
+    fftw_plan_ = fftw_plan_dft_1d(signal.size(), reinterpret_cast<fftw_complex*>(&signal.data[0]), fftw_.data(), FFTW_FORWARD, FFTW_ESTIMATE);
+    fftw_execute(fftw_plan_);
+    fft_size = fftw_.size();
+    max_fft_frequency(fftw_);
+    size_t N = signal.size();
     for (size_t i=0; 2*i<N; i++) {
-      // abs (amplitude)
-      std::get<0>(amp_freq_phase).push_back(sqrt(fft[i][0]*fft[i][0]+ fft[i][1]*fft[i][1]));
-      // frequencies
-      std::get<1>(amp_freq_phase).push_back(i/(N-1.0));
-      // phase
-      std::get<2>(amp_freq_phase).push_back(atan2(fft[i][1],-fft[i][0])+PI);
-    }
-    bool f_found = cmp_RMS (std::get<0>(amp_freq_phase),threshold);
-    if (f_found == true) {
-      double maxVal  = std::get<0>(amp_freq_phase)[0];
-      const size_t M = std::get<0>(amp_freq_phase).size();
-      for (size_t j = 1; j < M; j++) {
-        const double v = std::get<0>(amp_freq_phase)[j];
-        if( v > maxVal ) {
-          maxVal   = v;
-          maxIndex = j;
-        }
-       }
-      std::tuple<double, double, bool> freq_phase (std::get<1>(amp_freq_phase)[maxIndex], std::get<2>(amp_freq_phase)[maxIndex], f_found);
-      return freq_phase ;
-    }
-    else { 
-      std::tuple<double, double, bool> no_f_found (0.,0., false);
-      return no_f_found ;
+      amps_freqs.first .push_back(sqrt(fftw_[i][0]*fftw_[i][0]+ fftw_[i][1]*fftw_[i][1]));
+      amps_freqs.second.push_back(i/(N-1.0));
     }
   }
- 
-  // Absolute value of fourier integral
-  double abs_fourier_integral(const double f, const std::vector<std::complex<Tfloat>> &data) {
-    std::vector<std::complex<double>> sum_vec;
-    sum_vec.reserve(data.size());
-    const std::complex<double> z (0,-1);
-    for (size_t t=0; t<data.size(); t++) {
-      //sum_vec.push_back((std::conj(data[t])*std::exp(2.0*PI*f*t*z+phase)));
-      sum_vec.push_back((std::conj(data[t])*std::exp(2.0*PI*f*t*z)));
+  //////// Hann filter
+  void hann_window () {
+    signal.hann_filter();
+  }
+  //////// First estimation of the peak frequency from FFT 
+  void max_fft_frequency (std::vector<fftw_complex> &fftw_) {
+    double max_amplitude = sqrt(fftw_[0][0]*fftw_[0][0]+fftw_[0][1]*fftw_[0][1]);
+    max_index = 0;
+    for (size_t i=1; 2*i<fft_size; i++ ) {
+      const double current_amplitude = sqrt(fftw_[i][0]*fftw_[i][0]+fftw_[i][1]*fftw_[i][1]);
+      if (current_amplitude > max_amplitude) {
+        max_amplitude = current_amplitude;
+	max_index = i;
+      }      
     }  
-    double sum_of_elems=-abs(std::accumulate(sum_vec.begin(),sum_vec.end(), std::complex<double>(0.0)));
-    sum_of_elems=sum_of_elems/data.size();
-    return sum_of_elems;
+    fft_frequency = (max_index / fft_size);
+    fft_phase = atan2(fftw_[max_index][1], fftw_[max_index][0]);   
   }
-
-  // Absolute value of fourier integral as a function of f
-  auto fourier_integral_function(const std::vector<std::complex<Tfloat> > &data) {
-    auto y= [&data](double f){ return NAFF:: abs_fourier_integral(f, data); };
-    return y;
-  }
-
-  // Fourier integral
-  std::complex<Tfloat> fourier_integral(const std::vector<std::complex<Tfloat>> &a,const std::vector<std::complex<Tfloat>> &b){
-    std::vector<std::complex<double>> integral (a.size());
-    for (size_t i=0;i<a.size();i++){
-      integral.push_back(std::conj(a[i])*b[i]);
+  //////// Maximization of <f(t),exp(i*2*pi*f*t)> function for refined frequency f
+  ///////////////////// First method: Golden Section Search
+  template <typename FuncMin>
+  double cmp_min (const FuncMin& f, double min_value, double med_value,double max_value, double precision) {
+    double phi = (1+sqrt(5))/2;
+    double resphi=2-phi;
+    if (std::abs(min_value-max_value)<precision) {
+      return (min_value+max_value)/2;
     }
-    return std::accumulate(integral.begin(), integral.end(), std::complex<double>(0.0))/(1.0*a.size());
-  }
+    double d=med_value+resphi*(max_value-med_value);
+    if (f(d) < f(med_value))
+          return cmp_min(f,med_value,d,max_value,precision);
+    else
+          return cmp_min(f,d,med_value,min_value,precision);
+   }
+  ///////////////////// Second method: BOOST Brent
+  double maximize_fourier_integral () {
+    /*auto y = [this](double f) { 
+        complex_vec sums; 
+        sums.reserve(signal.size());
+        for (size_t t=0; t<signal.size(); t++) {
+          //sums.push_back(std::conj(signal.data[t])*std::exp(2.0*pi*f*t*z));
+          sums.push_back(std::conj(std::exp(2.0*pi*f*t*z))*signal.data[t]);
+        }  
+        return (-abs(std::accumulate(sums.begin(), sums.end(), std::complex<double>(0.0)))/signal.size()); };*/
+    
+    auto y = [this](double f) { 
+	Component c(f,signal.size());
+	return (-abs(signal%c)); };
 
-
-  // Exponential factor exp(2*pi*f*t), equal to delta(f-f0) in frequency domain
-  std::vector<std::complex<double>> positive_exp (double f, int N) {
-    std::vector<std::complex<double>> exp_vec;
-    exp_vec.reserve(N);
-    const std::complex<double> z (0,1);
-    for (int i=0;i<N;i++){
-      exp_vec.push_back(std::exp(2.0*PI*f*i*z));
-    }
-    return exp_vec;
-  } 
- 
-  // Exponential factor exp(-2*pi*f*t), equal to delta(f+f0) in frequency domain
-  std::vector<std::complex<double>> negative_exp (double f, int N){
-    std::vector<std::complex<double>> exp_vec;
-    exp_vec.reserve(N);
-    const std::complex<double> z (0,-1);
-    for (int i=0;i<N;i++){
-      exp_vec.push_back(std::exp(2.0*PI*f*i*z));
-    }
-    return exp_vec;
-  } 
-
-  // Hann window
-  std::vector<std::complex<Tfloat>> apply_hann_window(const std::vector<Tfloat> &init_data_x, const std::vector<Tfloat> &init_data_xp) {
-    const size_t windowSize = init_data_x.size();
-    std::vector<std::complex<Tfloat>> data;
-    data.reserve(init_data_x.size());
-    for (size_t i=0; i<windowSize; i++) {
-      const double multiplier = 0.5*(1-cos(2*PI*i/(windowSize-1)));
-      //const double multiplier = 1;
-      //data.emplace_back(init_data_x[i]* multiplier, init_data_xp[i]*multiplier);
-      data.emplace_back(init_data_x[i]* multiplier, init_data_xp[i]*multiplier);
-    }
-    return data;
-  }
-
-  // Maximize Abs fourier integral function
-  double maximize_fourier_integral(auto &y, size_t N, const std::tuple<double,double,bool> &max_freq) {
-    double small_step = 1./N;
-    double a = std::get<0>(max_freq) - small_step;
-    double b = std::get<0>(max_freq) + small_step;
+    double step = 1./signal.size();
+    double min = fft_frequency - step;
+    double max = fft_frequency + step;
+    ///
+      std::ofstream myfile2;    
+      std::string name = "/home/skostogl/cuTrack/lam"+std::to_string(f_counter+1)+".dat";
+      myfile2.open(name);
+      double i=min-0.3;
+      while (i<=max+0.3){  
+        myfile2<<i<<" "<<y(i)<<std::endl;
+	i=i+0.0001;
+      }
+      myfile2.close();
+    ///
+    double r_gold = cmp_min (y, min,fft_frequency, max, 1e-12);
+    std::cout<<" frequency from golden section method "<<r_gold<<std::endl;
     int bits = std::numeric_limits<double>::digits;
-    std::pair<double, double> r = boost::math::tools::brent_find_minima(y, a, b, bits);
-    return r.first;
+    std::pair<double, double> r = boost::math::tools::brent_find_minima(y, min, max, bits);
+    std::cout<<" frequency from BOOST brent "<<r.first<<std::endl;
+    return r.first;     
   }
   
-  // Bundle two real vectors into one compelex vector
-  std::vector<std::complex<Tfloat>> convert_vectors_to_complex(const std::vector<Tfloat> &init_data_x, const std::vector<Tfloat> &init_data_xp) {
-    std::vector<std::complex<Tfloat>> data;
-    data.reserve(init_data_x.size());
-    for (size_t i=0; i<init_data_x.size(); i++) {
-      data.emplace_back(init_data_x[i], init_data_xp[i]);
-    }
-    return data;
-  }
-  
-  // Split complex vector into a real and imag pair of vectors
-  std::pair<std::vector<Tfloat>,std::vector<Tfloat>> split_vector(const std::vector<std::complex<Tfloat>> &data) {
-    std::pair<std::vector<Tfloat>,std::vector<Tfloat>> split_data ;
-    for (size_t t=0;t<data.size();t++){
-      split_data.first.push_back(data[t].real());
-      split_data.second.push_back(data[t].imag());
-    } 
-    return split_data;
-  }
+  void subtract_contribution() {
+    if (f_counter == 0) {
+      Component v1(frequencies,signal.size());
+      //Component proj = projection (signal,v1);
+      Component proj = projection (signal,v1);
+      /*std::ofstream myfile2;    
+      std::string name = "/home/skostogl/cuTrack/signal.dat";
+      myfile2.open(name);
+      ///
+      for (auto i:signal.data) {
+        myfile2<<i.real()<<" "<<i.imag()<<std::endl;
+      }
+      myfile2.close();*/
+      signal=signal-proj.ampl*proj.exp_();
+      std::cout<<proj.ampl<<" Amplitude "<<std::endl;
+      ///
+      
+      Signal u1(v1.exp_());
+      norm_vectors.push_back(u1);
 
-  // Subtract signal with f component and move on to the next frequency
-  void subtract_amp (std::vector<Tfloat> & data_x,std::vector<Tfloat> &data_xp, double frequency) {
-    std::vector<std::complex<double>> data = convert_vectors_to_complex(data_x,data_xp);
-    std::pair<std::vector<std::complex<double>>,std::vector<std::complex<double>>> exp_factor;
-    std::complex<double> amplitude, amplitude_neg;
-    exp_factor.first  = ( positive_exp(frequency, data_x.size()) );
-    exp_factor.second = ( negative_exp(frequency, data_x.size()) );
-    // amplitude = Sigma (data* exp(i*2*pi*f))
-    amplitude  = fourier_integral(exp_factor.first,data);
-    amplitude_neg.real(amplitude.real());
-    amplitude_neg.imag(-amplitude.imag());
-    std::vector<std::complex<double>> subtr;
-    for (size_t i=0; i<data_x.size(); i++) {
-      // data= data - amplitude * Sigma (exp(i*2*pi*f))
-      std::complex<double> a = (amplitude*exp_factor.first[i] + amplitude_neg*exp_factor.second[i]) ;
-      data[i]=data[i]-a;
-    }
-    // return new data
-    std::pair<std::vector<Tfloat>,std::vector<Tfloat>> new_data = split_vector(data);
-    data_x  = new_data.first;
-    data_xp = new_data.second;
-  }
-
-  
-} //namespace NAFF
-
-std::vector<fftw_complex> FFT(const std::vector<Tfloat> & re, const std::vector<Tfloat> & im) {
-  const size_t N = re.size();
-  //alloc memory and prepare data
-  std::vector<fftw_complex> out(N);
-  std::vector<fftw_complex> in(N); 
-  for (size_t i = 0; i < N; i++) {
-    in[i][0] = re[i];
-    in[i][1] = im[i];
-  }
-  //make plan and call fftw
-  fftw_plan p;
-  p = fftw_plan_dft_1d(N, in.data(), out.data(), FFTW_FORWARD, FFTW_ESTIMATE);
-  fftw_execute(p);
-  fftw_destroy_plan(p);
-  return out;
-}
-
-
-double NAFF_f1( const std::vector<Tfloat> & init_data_x,const std::vector<Tfloat> & init_data_xp)  {
-  // FFT
-  auto fft = FFT(init_data_x, init_data_xp);
-  // Hann window
-  std::vector<std::complex<Tfloat>> wdata = NAFF::apply_hann_window(init_data_x,init_data_xp); 
-  // first estimate from FFT
-  double threshold=3.0;
-  std::tuple<double,double,bool> max_freq_phase=NAFF::find_max_freq(fft,threshold);
-  if (std::get<2>(max_freq_phase)==true) {
-    // optimize frequency determination
-    auto y= NAFF::fourier_integral_function (wdata);
-    return NAFF::maximize_fourier_integral(y,init_data_x.size(), max_freq_phase);
-  }
-  else {
-    std::cout<<" No frequency component found " <<std::endl;
-    return 0;
-  }
-}
-
-
-std::vector<double> NAFF_f( const std::vector<Tfloat> & init_data_x,const std::vector<Tfloat> & init_data_xp)  {
-  int components = 0;
-  bool f_found   = true;
-  std::vector<Tfloat> data_x = init_data_x;
-  std::vector<Tfloat> data_xp = init_data_xp;
-  std::vector<double> frequencies;
-  while (f_found == true) {
-    // FFT
-    auto fft = FFT(data_x, data_xp);
-    // Hann window
-    std::vector<std::complex<Tfloat>> wdata = NAFF::apply_hann_window(data_x, data_xp); 
-    // first estimate from FFT
-    double threshold = 3.0;
-    std::tuple<double,double,bool> max_freq_phase = NAFF::find_max_freq(fft, threshold);
-    if (std::get<2>(max_freq_phase) == true) {
-      // optimize frequency determination
-      auto y= NAFF::fourier_integral_function (wdata);
-      frequencies.push_back(maximize_fourier_integral(y,data_x.size(), max_freq_phase));
-      // remove frequency component from signal and repeat the process
-      NAFF::subtract_amp(data_x, data_xp, frequencies.back());
-      components ++;
-      if (components == 5) 
-        f_found = false;
     }
     else {
-       if (components == 0)    
-         std::cout<<" No frequency component found " <<std::endl;
-       else 
-	 std::cout<<components<<" frequencies found " <<std::endl;
-       f_found=false;
-    }  
+      Component v_i(frequencies.back(),signal.size());
+      Signal u_i(v_i.exp_());
+      std::ofstream myfile2;    
+      std::string name = "/home/skostogl/cuTrack/signal.dat";
+      /*myfile2.open(name);
+      ///
+      for (auto i:signal.data) {
+      //for (auto i:proj.exp_()) {
+        //myfile2<<(proj.ampl*i).real()<<" "<<(proj.ampl*i).imag()<<std::endl;
+        myfile2<<i.real()<<" "<<i.imag()<<std::endl;
+      }
+      myfile2.close();*/
+      for (size_t i=1;i<f_counter;i++) {
+	Signal proj = projection (v_i,norm_vectors[i]);
+	u_i = u_i - proj.ampl*proj.data_();
+      } 
+
+      /*myfile2.open(name);
+      ///
+      //for (auto i:signal.data) {
+      for (auto i:u_i.data) {
+        //myfile2<<(proj.ampl*i).real()<<" "<<(proj.ampl*i).imag()<<std::endl;
+        myfile2<<i.real()<<" "<<i.imag()<<std::endl;
+      }
+      myfile2.close();*/
+      Signal proj = projection (signal, u_i);
+
+      /*myfile2.open(name);
+      ///
+      //for (auto i:signal.data) {
+      for (auto i:proj.data) {
+        myfile2<<(proj.ampl*i).real()<<" "<<(proj.ampl*i).imag()<<std::endl;
+        //myfile2<<(proj.ampl*i).real()<<" "<<i.imag()<<std::endl;
+      }
+      myfile2.close();*/
+
+
+      signal=signal-proj.ampl*proj.data_();
+      myfile2.open(name);
+      ///
+      for (auto i:signal.data) {
+      //for (auto i:proj.data) {
+        //myfile2<<(proj.ampl*i).real()<<" "<<(proj.ampl*i).imag()<<std::endl;
+        myfile2<<i.real()<<" "<<i.imag()<<std::endl;
+      }
+      myfile2.close();
+      norm_vectors.push_back(u_i);
+    }
   }
- return frequencies;
-}
 
+  public:
+ 
+  ~NAFF() {  
+    fftw_destroy_plan(fftw_plan_); 
+  } 
 
+  double_vec get_f1 (double_vec &init_data_x,double_vec &init_data_xp) {
+    if (frequencies.size() == 0) {
+      input(init_data_x, init_data_xp);
+    }
+    FFTw();
+    //hann_window();
+    frequencies.push_back(maximize_fourier_integral());
+    //frequencies.push_back(fft_frequency);
+    return frequencies;
+  }
+  
+  double_vec get_f(double_vec &init_data_x, double_vec &init_data_xp) {
+    f_counter=0;
+    while (f_counter<3) {
+      get_f1(init_data_x, init_data_xp);
+      subtract_contribution();  
+      f_counter++;   
+    }
+  return frequencies;
+  }
 
+};
 

@@ -55,6 +55,6 @@ def make_resonance_diagram(order,x_range=[0,1],y_range=[0,1]):
   for const_term in vertical_lines:
         plt.axvline(const_term, linewidth=1, color="darkgrey")
 
-  plt.xlim(x_range)
-  plt.ylim(y_range)
+  #plt.xlim(x_range)
+  #plt.ylim(y_range)
 

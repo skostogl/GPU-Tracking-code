@@ -27,7 +27,7 @@ lattice.norm_emit_y=1e-4
 #n_particles=100
 #b=lattice.make_matched_bunch(n_particles)
 
-b,grid = cmp_grid(lattice.sigma_x(),lattice.sigma_x()*15,lattice.sigma_y(),lattice.sigma_y()*15,0.5)
+b,grid = cmp_grid(lattice.sigma_x(),lattice.sigma_x()*15,lattice.sigma_y(),lattice.sigma_y()*15,0.5,lattice)
 n_particles=b.size()
 
 lattice.track(b)

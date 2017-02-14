@@ -11,15 +11,15 @@ lattice = Lattice()
 if ( True ):
 #if ( False ):
   #lattice.read_twiss_table("LHC/lhc_no_bb.twi")
-  lattice.read_twiss_table("LHC/lhc_no_bb.twi")
+  lattice.read_twiss_table("small_ring/test/Optimized_ring_01.twi")
   lattice.optimise()
   lattice.compile()
   #lattice.write_ptx("LHC/lhc_no_bb")
-  lattice.write_ptx("LHC/lhc_no_bb")
+  lattice.write_ptx("small_ring/test/Optimized_ring_01.twi")
 else:
   #lattice.read_ptx("LHC/lhc_no_bb")
-  lattice.read_ptx("LHC/lhc_no_bb")
-
+  lattice.read_ptx("small_ring/test/Optimized_ring_01.twi")
+quit()
 lattice.n_turns = 1000
 lattice.norm_emit_x = 2e-6
 #lattice.bunch_length=1e-3

@@ -92,8 +92,10 @@ class Lattice {
         ss >> id >> name >> type >> val;
         header_map.emplace(std::move(name), std::move(val));
       }
+
       energy = stod(header_map.at("ENERGY"));
-      mass   = stod(header_map.at("MASS"));  
+      mass   = stod(header_map.at("MASS")); 
+      
     }
     if (columns.empty() or columns.front() != '*') {
       throw std::runtime_error("read_twiss_table(): cannot find the field description line in file "+std::string(fname) );
@@ -129,16 +131,19 @@ class Lattice {
       std::map<std::string, std::string> map_key_value;
       std::stringstream sc(std::move(columns));
       auto it = keys.begin();
+
       while (sc >> columns) {
         if (columns.front() == '\"' and columns.back() == '\"') {
           columns = columns.substr(1, columns.length()-2);
+
         }
         map_key_value.emplace(*it++,std::move(columns));
       }
-      if (first_line) {
+      if (first_line) {      
         populate_initial_conditions(map_key_value);
         first_line = false;
       }
+
       make_element_from_madx_row(map_key_value);
     }
     edited_lattice = true;
@@ -165,7 +170,7 @@ class Lattice {
     const auto is_zero = [&](const std::string & key) { return std::abs(get_d(key)) < 1e-15; };
 
     const std::string & ele_type = get_s("KEYWORD");
-    if ( ele_type == "MULTIPOLE" ) {
+    if ( ele_type == "MULTIPOLE") {
       const auto KL  = [](const int i){ return "K"+std::to_string(i)+"L" ; };
       const auto KSL = [](const int i){ return "K"+std::to_string(i)+"SL"; };
       int i = 0;
