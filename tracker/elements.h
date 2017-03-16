@@ -1,6 +1,7 @@
 #pragma once
 #include "float_type.h"
 #include "complex.h"
+#include "particle.h"
 
 namespace cst {
   const double pi = 3.14159265;
@@ -10,15 +11,6 @@ namespace cst {
   const double epsilon_0 = 8.854187e-12;
 
 }
-
-struct Particle {
-  Tfloat& x;
-  Tfloat& xp;
-  Tfloat& y;
-  Tfloat& yp;
-  Tfloat& z;
-  Tfloat& d;
-};
 
 struct Drift {
   Tfloat L;

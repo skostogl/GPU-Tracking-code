@@ -2,6 +2,10 @@
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 #include "lattice.h"
 
+  bool operator==(const Particle & p1, const Particle & p2) {
+    return (p1.x==p2.x);
+  }
+
 
 BOOST_PYTHON_MODULE(tracker)
 {
@@ -9,6 +13,10 @@ BOOST_PYTHON_MODULE(tracker)
   
   class_< std::vector<Tfloat> >("vec_Tfloat")
     .def(vector_indexing_suite< std::vector<Tfloat> >())
+  ;
+
+  class_< std::vector<Particle> >("vec_Particle")
+    .def(vector_indexing_suite< std::vector<Particle> >())
   ;
 
   class_< std::vector<HostBunch> >("vec_HostBunch")
@@ -62,18 +70,22 @@ BOOST_PYTHON_MODULE(tracker)
     .def_readwrite("mass", &Lattice::mass)
   ;
 
+  class_<Particle>("Particle")
+    .def_readwrite("x" , &Particle::x)
+    .def_readwrite("xp", &Particle::xp)
+    .def_readwrite("y" , &Particle::y)
+    .def_readwrite("yp", &Particle::yp)
+    .def_readwrite("z" , &Particle::z)
+    .def_readwrite("d" , &Particle::d)
+  ;
+
   class_<HostBunch>("HostBunch", init<const size_t>())
     .def("size", &HostBunch::size)
     .def("fromDeviceBunch", &HostBunch::copyFromDeviceBunch)
     .def("toDeviceBunch", &HostBunch::copyToDeviceBunch)
-    .def_readwrite("x" , &HostBunch::x )
-    .def_readwrite("xp", &HostBunch::xp)
-    .def_readwrite("y" , &HostBunch::y )
-    .def_readwrite("yp", &HostBunch::yp)
-    .def_readwrite("z" , &HostBunch::z )
-    .def_readwrite("d" , &HostBunch::d )
+    .def_readwrite("particle", &HostBunch::particles)
   ;
- 
+
   class_<DeviceBunch>("DeviceBunch",init<const HostBunch &>())
   ;
   
